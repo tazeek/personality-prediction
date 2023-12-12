@@ -1,12 +1,6 @@
 import numpy as np
-import pandas as pd
-import re
-import csv
-import preprocessor as p
 from torch.utils.data import DataLoader, Dataset
 import torch
-from transformers import *
-import math
 
 from utils.author_100recent import get_100_recent_posts
 import utils.dataset_processors as dataset_processors
@@ -14,12 +8,17 @@ import utils.dataset_processors as dataset_processors
 
 class MyMapDataset(Dataset):
     def __init__(self, dataset, tokenizer, token_length, DEVICE, mode):
-        if dataset == "essays":
+
+        print(f"Dataset is {dataset}")
+        author_ids, input_ids, targets = None, None, None
+
+        if dataset == "'essays'":
+            print("I AM HERE!!")
             datafile = "data/essays/essays.csv"
             author_ids, input_ids, targets = dataset_processors.essays_embeddings(
                 datafile, tokenizer, token_length, mode
             )
-        elif dataset == "kaggle":
+        elif dataset == 'kaggle':
             datafile = "data/kaggle/kaggle.csv"
             author_ids, input_ids, targets = dataset_processors.kaggle_embeddings(
                 datafile, tokenizer, token_length
@@ -28,6 +27,10 @@ class MyMapDataset(Dataset):
             author_ids, input_ids, targets = dataset_processors.pandora_embeddings(
                 datafile, tokenizer, token_length
             )
+
+        #from pprint import pprint
+        #pprint(author_ids)
+        #print("\n")
 
         author_ids = torch.from_numpy(np.array(author_ids)).long().to(DEVICE)
         input_ids = torch.from_numpy(np.array(input_ids)).long().to(DEVICE)

@@ -7,27 +7,12 @@ from datetime import timedelta
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-from transformers import *
+from transformers import BertModel, BertTokenizer, AlbertModel, AlbertTokenizer
 
 import utils.gen_utils as utils
 from utils.data_utils import MyMapDataset
 import sys
 from pathlib import Path
-
-sys.path.insert(0, os.getcwd())
-
-start = time.time()
-
-if torch.cuda.is_available():
-    DEVICE = torch.device("cuda")
-    print("GPU found (", torch.cuda.get_device_name(torch.cuda.current_device()), ")")
-    torch.cuda.set_device(torch.cuda.current_device())
-    print("num device avail: ", torch.cuda.device_count())
-
-else:
-    DEVICE = torch.device("cpu")
-    print("running on cpu")
-
 
 def extract_bert_features(input_ids, mode, n_hl):
     """Extract bert embedding for each input."""
@@ -54,6 +39,7 @@ def extract_bert_features(input_ids, mode, n_hl):
         hidden_features.append(tmphidden_features.mean(axis=0))
 
     else:
+        
         tmp = []
         bert_output = model(input_ids)
         # bert_output[2](this id gives all BERT outputs)[ii+1](which BERT layer)[:,0,:](taking the <CLS> output)
@@ -70,7 +56,10 @@ def extract_bert_features(input_ids, mode, n_hl):
 
 def get_model(embed):
     # * Model          | Tokenizer          | Pretrained weights shortcut
-    # MODEL=(DistilBertModel, DistilBertTokenizer, 'distilbert-base-uncased')
+    n_hl = 12
+    hidden_dim = 768
+    MODEL = (BertModel, BertTokenizer, "bert-base-uncased")
+
     if embed == "bert-base":
         n_hl = 12
         hidden_dim = 768
@@ -103,6 +92,21 @@ def get_model(embed):
 
 
 if __name__ == "__main__":
+
+    sys.path.insert(0, os.getcwd())
+
+    start = time.time()
+
+    # Check for CUDA
+    if torch.cuda.is_available():
+        DEVICE = torch.device("cuda")
+        print("GPU found (", torch.cuda.get_device_name(torch.cuda.current_device()), ")")
+        torch.cuda.set_device(torch.cuda.current_device())
+        print("num device avail: ", torch.cuda.device_count())
+    else:
+        DEVICE = torch.device("cpu")
+        print("running on cpu")
+
     # argument extractor
     (
         dataset,
@@ -113,20 +117,20 @@ if __name__ == "__main__":
         mode,
         embed_mode,
     ) = utils.parse_args_extractor()
+
     print(
         "\n{} | {} | {} | {} | {}\n".format(
             dataset, embed, token_length, mode, embed_mode
         )
     )
-    batch_size = int(32)
+
     model, tokenizer, n_hl, hidden_dim = get_model(embed)
 
     # create a class which can be passed to the pyTorch dataloader. responsible for returning tokenized and encoded values of the dataset
     # this class will have __getitem__(self,idx) function which will return input_ids and target values
 
     map_dataset = MyMapDataset(dataset, tokenizer, token_length, DEVICE, mode)
-
-    data_loader = DataLoader(dataset=map_dataset, batch_size=batch_size, shuffle=False,)
+    data_loader = DataLoader(dataset=map_dataset, batch_size=32, shuffle=False)
 
     if DEVICE == torch.device("cuda"):
         model = model.cuda()
@@ -147,7 +151,9 @@ if __name__ == "__main__":
         with torch.no_grad():
             all_targets.append(targets.cpu().numpy())
             all_author_ids.append(author_ids.cpu().numpy())
-            extract_bert_features(input_ids, mode, n_hl)
+
+            hidden_feature = extract_bert_features(input_ids, mode, n_hl)
+            hidden_features.append(hidden_feature.cpu().numpy())
 
     Path(op_dir).mkdir(parents=True, exist_ok=True)
     pkl_file_name = dataset + "-" + embed + "-" + embed_mode + "-" + mode + ".pkl"
