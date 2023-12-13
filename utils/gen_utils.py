@@ -60,7 +60,7 @@ def parse_args():
     ap.add_argument("-mode", type=str, default="512_head")
     ap.add_argument("-embed_mode", type=str, default="cls")
     ap.add_argument("-jobid", type=int, default=0)
-    ap.add_argument("-save_model", type=str, default="no")
+    ap.add_argument("-save_model", type=str, default="yes")
     args = ap.parse_args()
     return (
         args.inp_dir,

@@ -46,7 +46,7 @@ def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer):
         inputs.extend(np.einsum("k,kij->ij", alphaW, data_x[ii]))
         targets.extend(data_y[ii])
 
-    inputs = np.array(inputs)
+    inputs = np.array(inputs)[:2467]
     full_targets = np.array(targets)
 
     return inputs, full_targets
@@ -67,6 +67,7 @@ def training(dataset, inputs, full_targets, inp_dir, save_model):
     best_models, best_model, best_accuracy = {}, None, 0.0
 
     for trait_idx in range(full_targets.shape[1]):
+
         # convert targets to one-hot encoding
         targets = full_targets[:, trait_idx]
         n_data = targets.shape[0]
@@ -75,27 +76,30 @@ def training(dataset, inputs, full_targets, inp_dir, save_model):
         expdata["fold"].extend(np.arange(1, n_splits + 1))
 
         skf = StratifiedKFold(n_splits=n_splits, shuffle=False)
-        k = -1
+        
+        model = tf.keras.models.Sequential()
+
+        # define the neural network architecture
+        model.add(
+            tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
+        )
+
+        model.add(tf.keras.layers.Dense(n_classes))
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+            metrics=["mse", "accuracy"],
+        )
+
         for train_index, test_index in skf.split(inputs, targets):
+
             x_train, x_test = inputs[train_index], inputs[test_index]
             y_train, y_test = targets[train_index], targets[test_index]
+
             # converting to one-hot embedding
             y_train = tf.keras.utils.to_categorical(y_train, num_classes=n_classes)
             y_test = tf.keras.utils.to_categorical(y_test, num_classes=n_classes)
-            model = tf.keras.models.Sequential()
-
-            # define the neural network architecture
-            model.add(
-                tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
-            )
-            model.add(tf.keras.layers.Dense(n_classes))
-
-            k += 1
-            model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
-                loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-                metrics=["mse", "accuracy"],
-            )
 
             history = model.fit(
                 x_train,
