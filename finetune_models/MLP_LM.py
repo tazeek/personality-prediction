@@ -8,6 +8,7 @@ import numpy as np
 import re
 import pickle
 import time
+import math
 import pandas as pd
 from pathlib import Path
 
@@ -18,7 +19,6 @@ sys.path.insert(0, parent_dir)
 sys.path.insert(0, os.getcwd())
 
 import utils.gen_utils as utils
-
 
 def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer, n_hl, hidden_dim):
     """Read data from pkl file and prepare for training."""
@@ -78,6 +78,8 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
 
     best_models, best_model, best_accuracy = {}, None, 0.0
 
+    start = time.time()
+
     for trait_idx in range(full_targets.shape[1]):
 
         # convert targets to one-hot encoding
@@ -87,6 +89,7 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
         expdata["fold"].extend(np.arange(1, n_splits + 1))
 
         skf = StratifiedKFold(n_splits=n_splits, shuffle=False)
+        accuracy = []
 
         for train_index, test_index in skf.split(inputs, targets):
 
@@ -122,8 +125,8 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
                 verbose=0,
             )
 
-            # Get the metrics evaluation
             max_val_accuracy = max(history.history["val_accuracy"])
+            accuracy.append(max_val_accuracy)
             expdata["acc"].append(100 * max_val_accuracy)
 
             # check if the current model is the best so far
@@ -132,8 +135,15 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
                 best_model = model
 
         # store the best model for this trait
+        average = sum(accuracy) / len(accuracy)
+        print(f'Average for {trait_labels[trait_idx]}: {average}')
+        print("\n\n")
         best_models[trait_labels[trait_idx]] = best_model
 
+    finish = time.time() - start
+    print(f'Time taken to train: {finish} seconds')
+    print("\n\n")
+    
     # save the best models to separate files
     if str(save_model).lower() == "yes":
         path = inp_dir + "finetune_mlp_lm"
