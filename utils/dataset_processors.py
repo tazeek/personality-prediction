@@ -26,16 +26,21 @@ def preprocess_text(sentence):
 def load_essays_df(datafile):
     with open(datafile, "rt") as csvf:
         csvreader = csv.reader(csvf, delimiter=",", quotechar='"')
+
         first_line = True
+
         df = pd.DataFrame(
             columns=["user", "text", "token_len", "EXT", "NEU", "AGR", "CON", "OPN"]
         )
+
         for line in csvreader:
+
             if first_line:
                 first_line = False
                 continue
 
             text = line[1]
+
             new_row = pd.DataFrame(
                 {
                     "user": [line[0]],
@@ -48,6 +53,7 @@ def load_essays_df(datafile):
                     "OPN": [1 if line[6].lower() == "y" else 0],
                 }
             )
+
             df = pd.concat([df, new_row], ignore_index=True)
 
     print("EXT : ", df["EXT"].value_counts())
@@ -55,6 +61,7 @@ def load_essays_df(datafile):
     print("AGR : ", df["AGR"].value_counts())
     print("CON : ", df["CON"].value_counts())
     print("OPN : ", df["OPN"].value_counts())
+    print("\n\n")
 
     return df
 
@@ -63,8 +70,8 @@ def essays_embeddings(datafile, tokenizer, token_length, mode):
     targets = []
     input_ids = []
 
+    # Load the dataset
     df = load_essays_df(datafile)
-    cnt = 0
 
     # sorting all essays in ascending order of their length
     for ind in df.index:
@@ -74,10 +81,14 @@ def essays_embeddings(datafile, tokenizer, token_length, mode):
     df.sort_values(by=["token_len", "user"], inplace=True, ascending=True)
     tmp_df = df["user"]
     tmp_df.to_csv("data/essays/author_id_order.csv", index_label="order")
+
     print("Mean length of essay: ", df["token_len"].mean())
 
-    for ii in range(len(df)):
-        text = preprocess_text(df["text"][ii])
+    # Go through the loop
+    for index in range(len(df)):
+
+        # Preprocess and tokenize
+        text = preprocess_text(df["text"][index])
         tokens = tokenizer.tokenize(text)
 
         if mode == "normal" or mode == "512_head":
@@ -89,6 +100,7 @@ def essays_embeddings(datafile, tokenizer, token_length, mode):
                     pad_to_max_length=True,
                 )
             )
+
         elif mode == "512_tail":
             input_ids.append(
                 tokenizer.encode(
@@ -98,6 +110,7 @@ def essays_embeddings(datafile, tokenizer, token_length, mode):
                     pad_to_max_length=True,
                 )
             )
+
         elif mode == "256_head_tail":
             input_ids.append(
                 tokenizer.encode(
@@ -125,23 +138,28 @@ def essays_embeddings(datafile, tokenizer, token_length, mode):
                 )
                 for x in subdoc_tokens
             ]
+
             # print(token_ids)
             token_ids = np.array(token_ids).astype(int)
 
             buffer_len = docmax_len // subdoc_len - token_ids.shape[0]
             # print(buffer_len)
+
             tmp = np.full(shape=(buffer_len, token_length), fill_value=0, dtype=int)
             token_ids = np.concatenate((token_ids, tmp), axis=0)
 
             input_ids.append(token_ids)
 
         targets.append(
-            [df["EXT"][ii], df["NEU"][ii], df["AGR"][ii], df["CON"][ii], df["OPN"][ii]]
+            [
+                df["EXT"][index], df["NEU"][index], df["AGR"][index], 
+                df["CON"][index], df["OPN"][index]
+            ]
         )
-        cnt += 1
 
     author_ids = np.array(df.index)
     print("loaded all input_ids and targets from the data file!")
+
     return author_ids, input_ids, targets
 
 
