@@ -39,14 +39,16 @@ def extract_bert_features(input_ids, mode, n_hl):
         hidden_features.append(tmphidden_features.mean(axis=0))
 
     else:
-        
+
         tmp = []
         bert_output = model(input_ids)
+        
         # bert_output[2](this id gives all BERT outputs)[ii+1](which BERT layer)[:,0,:](taking the <CLS> output)
 
         for ii in range(n_hl):
             if embed_mode == "cls":
                 tmp.append(bert_output[2][ii + 1][:, 0, :].cpu().numpy())
+
             elif embed_mode == "mean":
                 tmp.append((bert_output[2][ii + 1].cpu().numpy()).mean(axis=1))
 
@@ -56,6 +58,7 @@ def extract_bert_features(input_ids, mode, n_hl):
 
 def get_model(embed):
     # * Model          | Tokenizer          | Pretrained weights shortcut
+
     n_hl = 12
     hidden_dim = 768
     MODEL = (BertModel, BertTokenizer, "bert-base-uncased")
@@ -84,9 +87,14 @@ def get_model(embed):
 
     # load the LM model and tokenizer from the HuggingFace Transformers library
     model = model_class.from_pretrained(
-        pretrained_weights, output_hidden_states=True
-    )  # output_attentions=False
-    tokenizer = tokenizer_class.from_pretrained(pretrained_weights, do_lower_case=True)
+        pretrained_weights, 
+        output_hidden_states=True
+    ) 
+
+    tokenizer = tokenizer_class.from_pretrained(
+        pretrained_weights, 
+        do_lower_case=True
+    )
 
     return model, tokenizer, n_hl, hidden_dim
 
@@ -153,11 +161,15 @@ if __name__ == "__main__":
             all_author_ids.append(author_ids.cpu().numpy())
 
             hidden_feature = extract_bert_features(input_ids, mode, n_hl)
-            hidden_features.append(hidden_feature.cpu().numpy())
+            hidden_features.append(hidden_feature[0])
 
     Path(op_dir).mkdir(parents=True, exist_ok=True)
     pkl_file_name = dataset + "-" + embed + "-" + embed_mode + "-" + mode + ".pkl"
 
+    print(len(all_author_ids))
+    print(len(all_targets))
+    print(len(hidden_features))
+    quit()
     file = open(os.path.join(op_dir, pkl_file_name), "wb")
     pickle.dump(zip(all_author_ids, hidden_features, all_targets), file)
     file.close()
