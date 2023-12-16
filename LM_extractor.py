@@ -16,6 +16,7 @@ from pathlib import Path
 
 def extract_bert_features(input_ids, mode, n_hl):
     """Extract bert embedding for each input."""
+
     if mode == "docbert":
         # print(input_ids.shape)
         tmphidden_features = []
@@ -45,12 +46,13 @@ def extract_bert_features(input_ids, mode, n_hl):
         
         # bert_output[2](this id gives all BERT outputs)[ii+1](which BERT layer)[:,0,:](taking the <CLS> output)
 
-        for ii in range(n_hl):
+        # Go through the layers, one at a time
+        for layer in range(n_hl):
             if embed_mode == "cls":
-                tmp.append(bert_output[2][ii + 1][:, 0, :].cpu().numpy())
+                tmp.append(bert_output[2][layer + 1][:, 0, :].cpu().numpy())
 
             elif embed_mode == "mean":
-                tmp.append((bert_output[2][ii + 1].cpu().numpy()).mean(axis=1))
+                tmp.append((bert_output[2][layer + 1].cpu().numpy()).mean(axis=1))
 
         hidden_features.append(np.array(tmp))
         return hidden_features
@@ -138,12 +140,13 @@ if __name__ == "__main__":
     # this class will have __getitem__(self,idx) function which will return input_ids and target values
 
     map_dataset = MyMapDataset(dataset, tokenizer, token_length, DEVICE, mode)
-    data_loader = DataLoader(dataset=map_dataset, batch_size=32, shuffle=False)
+    data_loader = DataLoader(dataset=map_dataset, batch_size=batch_size, shuffle=False)
 
     if DEVICE == torch.device("cuda"):
         model = model.cuda()
         # model.parameters() returns a generator obj
         # print('model loaded to gpu? ', next(model.parameters()).is_cuda)
+
         print(
             "\ngpu mem alloc: ", round(torch.cuda.memory_allocated() * 1e-9, 2), " GB"
         )

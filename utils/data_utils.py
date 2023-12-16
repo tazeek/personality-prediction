@@ -12,25 +12,22 @@ class MyMapDataset(Dataset):
         print(f"Dataset is {dataset}")
         author_ids, input_ids, targets = None, None, None
 
-        if dataset == "'essays'":
-            print("I AM HERE!!")
+        if dataset == "essays":
             datafile = "data/essays/essays.csv"
             author_ids, input_ids, targets = dataset_processors.essays_embeddings(
                 datafile, tokenizer, token_length, mode
             )
+
         elif dataset == 'kaggle':
             datafile = "data/kaggle/kaggle.csv"
             author_ids, input_ids, targets = dataset_processors.kaggle_embeddings(
                 datafile, tokenizer, token_length
             )
+
         elif dataset == "pandora":
             author_ids, input_ids, targets = dataset_processors.pandora_embeddings(
                 datafile, tokenizer, token_length
             )
-
-        #from pprint import pprint
-        #pprint(author_ids)
-        #print("\n")
 
         author_ids = torch.from_numpy(np.array(author_ids)).long().to(DEVICE)
         input_ids = torch.from_numpy(np.array(input_ids)).long().to(DEVICE)
