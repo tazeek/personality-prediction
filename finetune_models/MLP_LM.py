@@ -91,6 +91,21 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
         skf = StratifiedKFold(n_splits=n_splits, shuffle=False)
         accuracy = []
 
+        # Define the neural network architecture            
+        model = tf.keras.models.Sequential()
+
+        model.add(
+            tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
+        )
+
+        model.add(tf.keras.layers.Dense(n_classes))
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+            metrics=["mse", "accuracy"],
+        )
+
         for train_index, test_index in skf.split(inputs, targets):
 
             x_train, x_test = inputs[train_index], inputs[test_index]
@@ -99,21 +114,6 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
             # converting to one-hot embedding
             y_train = tf.keras.utils.to_categorical(y_train, num_classes=n_classes)
             y_test = tf.keras.utils.to_categorical(y_test, num_classes=n_classes)
-
-            # Define the neural network architecture            
-            model = tf.keras.models.Sequential()
-
-            model.add(
-                tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
-            )
-
-            model.add(tf.keras.layers.Dense(n_classes))
-
-            model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
-                loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-                metrics=["mse", "accuracy"],
-            )
 
             # Start training
             history = model.fit(
