@@ -20,14 +20,17 @@ sys.path.insert(0, os.getcwd())
 import utils.gen_utils as utils
 
 
-def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer):
+def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer, n_hl, hidden_dim):
     """Read data from pkl file and prepare for training."""
+
+    # Load the file
     file = open(
         inp_dir + dataset + "-" + embed + "-" + embed_mode + "-" + mode + ".pkl", "rb"
     )
     data = pickle.load(file)
     author_ids, data_x, data_y = list(zip(*data))
     file.close()
+
 
     # alphaW is responsible for which BERT layer embedding we will be using
     if layer == "all":
@@ -42,18 +45,22 @@ def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer):
     inputs = []
     targets = []
     n_batches = len(data_y)
-    for ii in range(n_batches):
-        inputs.extend(np.einsum("k,kij->ij", alphaW, data_x[ii]))
-        targets.extend(data_y[ii])
+    
+    for index in range(n_batches):
+        inputs.extend(np.einsum("k,kij->ij", alphaW, data_x[index]))
+        targets.extend(data_y[index])
 
-    inputs = np.array(inputs)[:2467]
+    inputs = np.array(inputs)
     full_targets = np.array(targets)
 
     return inputs, full_targets
 
 
-def training(dataset, inputs, full_targets, inp_dir, save_model):
+def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
     """Train MLP model for each trait on 10-fold corss-validtion."""
+
+    trait_labels = []
+
     if dataset == "kaggle":
         trait_labels = ["E", "N", "F", "J"]
     else:
@@ -66,6 +73,9 @@ def training(dataset, inputs, full_targets, inp_dir, save_model):
 
     best_models, best_model, best_accuracy = {}, None, 0.0
 
+    print(full_targets)
+    quit()
+
     for trait_idx in range(full_targets.shape[1]):
 
         # convert targets to one-hot encoding
@@ -76,21 +86,7 @@ def training(dataset, inputs, full_targets, inp_dir, save_model):
         expdata["fold"].extend(np.arange(1, n_splits + 1))
 
         skf = StratifiedKFold(n_splits=n_splits, shuffle=False)
-        
-        model = tf.keras.models.Sequential()
-
-        # define the neural network architecture
-        model.add(
-            tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
-        )
-
-        model.add(tf.keras.layers.Dense(n_classes))
-
-        model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
-            loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-            metrics=["mse", "accuracy"],
-        )
+        k = -1
 
         for train_index, test_index in skf.split(inputs, targets):
 
@@ -100,6 +96,23 @@ def training(dataset, inputs, full_targets, inp_dir, save_model):
             # converting to one-hot embedding
             y_train = tf.keras.utils.to_categorical(y_train, num_classes=n_classes)
             y_test = tf.keras.utils.to_categorical(y_test, num_classes=n_classes)
+            
+            model = tf.keras.models.Sequential()
+
+            # define the neural network architecture
+            model.add(
+                tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
+            )
+
+            model.add(tf.keras.layers.Dense(n_classes))
+
+            k += 1
+
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
+                loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                metrics=["mse", "accuracy"],
+            )
 
             history = model.fit(
                 x_train,
@@ -175,6 +188,8 @@ def logging(df, log_expdata=True):
 
 
 if __name__ == "__main__":
+
+    # Get the args
     (
         inp_dir,
         dataset,
@@ -195,6 +210,7 @@ if __name__ == "__main__":
     network = "MLP"
     MODEL_INPUT = "LM_features"
     print("{} : {} : {} : {} : {}".format(dataset, embed, layer, mode, embed_mode))
+    
     n_classes = 2
     seed = jobid
     np.random.seed(seed)
@@ -211,6 +227,17 @@ if __name__ == "__main__":
         n_hl = 24
         hidden_dim = 1024
 
-    inputs, full_targets = get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer)
-    df = training(dataset, inputs, full_targets, inp_dir, save_model)
+    # Load input data
+    inputs, full_targets = get_inputs(
+        inp_dir, dataset, embed, 
+        embed_mode, mode, layer,
+        n_hl, hidden_dim
+    )
+
+    # Perform the training
+    df = training(
+        dataset, inputs, full_targets, 
+        inp_dir, save_model, n_classes)
+    
+    # Save
     logging(df, log_expdata)

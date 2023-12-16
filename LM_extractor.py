@@ -17,7 +17,10 @@ from pathlib import Path
 def extract_bert_features(input_ids, mode, n_hl):
     """Extract bert embedding for each input."""
 
+    hidden_features = []
+
     if mode == "docbert":
+
         # print(input_ids.shape)
         tmphidden_features = []
         input_ids = input_ids.permute(1, 0, 2)
@@ -55,7 +58,8 @@ def extract_bert_features(input_ids, mode, n_hl):
                 tmp.append((bert_output[2][layer + 1].cpu().numpy()).mean(axis=1))
 
         hidden_features.append(np.array(tmp))
-        return hidden_features
+
+    return hidden_features
 
 
 def get_model(embed):
@@ -106,7 +110,7 @@ if __name__ == "__main__":
     sys.path.insert(0, os.getcwd())
 
     start = time.time()
-
+    
     # Check for CUDA
     if torch.cuda.is_available():
         DEVICE = torch.device("cuda")
@@ -158,21 +162,26 @@ if __name__ == "__main__":
     all_author_ids = []
 
     # get bert embedding for each input
+    
     for author_ids, input_ids, targets in data_loader:
         with torch.no_grad():
+
             all_targets.append(targets.cpu().numpy())
             all_author_ids.append(author_ids.cpu().numpy())
 
             hidden_feature = extract_bert_features(input_ids, mode, n_hl)
             hidden_features.append(hidden_feature[0])
 
+    time_taken = time.time() - start
+
     Path(op_dir).mkdir(parents=True, exist_ok=True)
     pkl_file_name = dataset + "-" + embed + "-" + embed_mode + "-" + mode + ".pkl"
 
+    print(f'Time taken: {time_taken} seconds')
     print(len(all_author_ids))
     print(len(all_targets))
     print(len(hidden_features))
-    quit()
+
     file = open(os.path.join(op_dir, pkl_file_name), "wb")
     pickle.dump(zip(all_author_ids, hidden_features, all_targets), file)
     file.close()
