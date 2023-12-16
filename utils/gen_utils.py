@@ -45,7 +45,9 @@ def str_to_bool(value):
 
 
 def parse_args():
+
     ap = argparse.ArgumentParser()
+
     ap.add_argument("-inp_dir", type=str, default="pkl_data/")
     ap.add_argument("-dataset", type=str, default="essays")
     ap.add_argument("-lr", type=float, default=5e-4)
@@ -61,7 +63,9 @@ def parse_args():
     ap.add_argument("-embed_mode", type=str, default="cls")
     ap.add_argument("-jobid", type=int, default=0)
     ap.add_argument("-save_model", type=str, default="yes")
+    
     args = ap.parse_args()
+
     return (
         args.inp_dir,
         args.dataset,

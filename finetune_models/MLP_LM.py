@@ -47,7 +47,11 @@ def get_inputs(inp_dir, dataset, embed, embed_mode, mode, layer, n_hl, hidden_di
     n_batches = len(data_y)
     
     for index in range(n_batches):
+
+        # Extracts the CLS token -_-
+        # You could have done this in the extraction step :facepalm:
         inputs.extend(np.einsum("k,kij->ij", alphaW, data_x[index]))
+
         targets.extend(data_y[index])
 
     inputs = np.array(inputs)
@@ -68,25 +72,21 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
 
     n_splits = 10
     fold_acc = {}
+
     expdata = {}
     expdata["acc"], expdata["trait"], expdata["fold"] = [], [], []
 
     best_models, best_model, best_accuracy = {}, None, 0.0
 
-    print(full_targets)
-    quit()
-
     for trait_idx in range(full_targets.shape[1]):
 
         # convert targets to one-hot encoding
         targets = full_targets[:, trait_idx]
-        n_data = targets.shape[0]
 
         expdata["trait"].extend([trait_labels[trait_idx]] * n_splits)
         expdata["fold"].extend(np.arange(1, n_splits + 1))
 
         skf = StratifiedKFold(n_splits=n_splits, shuffle=False)
-        k = -1
 
         for train_index, test_index in skf.split(inputs, targets):
 
@@ -96,17 +96,15 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
             # converting to one-hot embedding
             y_train = tf.keras.utils.to_categorical(y_train, num_classes=n_classes)
             y_test = tf.keras.utils.to_categorical(y_test, num_classes=n_classes)
-            
+
+            # Define the neural network architecture            
             model = tf.keras.models.Sequential()
 
-            # define the neural network architecture
             model.add(
                 tf.keras.layers.Dense(50, input_dim=hidden_dim, activation="relu")
             )
 
             model.add(tf.keras.layers.Dense(n_classes))
-
-            k += 1
 
             model.compile(
                 optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
@@ -114,6 +112,7 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
                 metrics=["mse", "accuracy"],
             )
 
+            # Start training
             history = model.fit(
                 x_train,
                 y_train,
@@ -123,6 +122,7 @@ def training(dataset, inputs, full_targets, inp_dir, save_model, n_classes):
                 verbose=0,
             )
 
+            # Get the metrics evaluation
             max_val_accuracy = max(history.history["val_accuracy"])
             expdata["acc"].append(100 * max_val_accuracy)
 
