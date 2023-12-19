@@ -3,11 +3,12 @@ from transformers import BertTokenizer, BertModel
 from pathlib import Path
 
 from unseen_predictor import extract_bert_features
-
 import tensorflow as tf
 
 import torch
 import sys
+
+import utils.dataset_processors as dataset_processors
 
 def get_bert_model():
 
@@ -43,6 +44,7 @@ def load_finetuned_models():
 # - Big 5
 # - BERT
 bert_tokenizer, bert_model = get_bert_model()
+models_ocean = load_finetuned_models()
 
 # Load the dataset
 
