@@ -1,8 +1,19 @@
 
+from transformers import BertTokenizer, BertModel
+
+def get_bert_model():
+
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    model = BertModel.from_pretrained("bert-base-uncased")
+
+    return tokenizer, model
+# Load the pre-trained models
+# - Big 5
+# - BERT
+
+bert_tokenizer, bert_model = get_bert_model()
 
 # Load the dataset
-
-# Load the pre-trained models
 
 # Iterate by conversation
 
