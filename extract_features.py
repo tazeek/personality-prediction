@@ -1,9 +1,12 @@
 
 from transformers import BertTokenizer, BertModel
 from pathlib import Path
+
+from unseen_predictor import extract_bert_features
+
 import tensorflow as tf
 
-import re
+import torch
 import sys
 
 def get_bert_model():
@@ -35,7 +38,6 @@ def load_finetuned_models():
             models[trait] = tf.keras.models.load_model(model_name)
 
     return models
-
 
 # Load the pre-trained models
 # - Big 5
