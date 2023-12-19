@@ -60,6 +60,7 @@ bert_tokenizer, bert_model = get_bert_model()
 models_ocean = load_finetuned_models()
 
 # Load the dataset
+dataset = load_dataset()
 
 # Iterate by conversation
 
