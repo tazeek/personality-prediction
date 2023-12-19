@@ -12,6 +12,17 @@ import codecs
 import torch
 import sys
 
+def load_dataset():
+     
+    file_directory = 'dataset_erc\dailydialogue\dev.json'
+
+    train_file = []
+
+    with codecs.open(file_directory, "r", "utf-8") as f:
+        train_file = json.load(f)
+
+    return train_file
+
 def get_bert_model():
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
