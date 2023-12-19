@@ -3,12 +3,14 @@ from transformers import BertTokenizer, BertModel
 from pathlib import Path
 
 from unseen_predictor import extract_bert_features
+import utils.dataset_processors as dataset_processors
+
 import tensorflow as tf
 
+import json
+import codecs
 import torch
 import sys
-
-import utils.dataset_processors as dataset_processors
 
 def get_bert_model():
 
