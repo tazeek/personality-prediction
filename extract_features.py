@@ -12,6 +12,13 @@ import codecs
 import torch
 import sys
 
+def get_personality_features():
+     
+     # Iterate trait by trait
+     # Get the features before the softmax
+     # Save in dictionary
+     ...
+
 def load_dataset():
      
     file_directory = 'dataset_erc\dailydialogue\dev.json'
@@ -53,6 +60,23 @@ def load_finetuned_models():
 
     return models
 
+def get_personalities_conversation(conversation):
+     
+     for utterance in conversation:
+          
+        # Get the utterance
+
+        # Convert utterance to embeddings
+
+        # Feed embeddings into the model
+        # Get 5 feature vectors
+
+        # [Bonus] Convert features to VAD domain
+        # Refer to the paper
+
+        # Save features to dictionary
+          ...
+
 # Load the pre-trained models
 # - Big 5
 # - BERT
@@ -63,18 +87,12 @@ models_ocean = load_finetuned_models()
 dataset = load_dataset()
 
 # Iterate by conversation
+for conversation in dataset:
+     
+    # Iterate by utterance
+     personalized_conversation_dict = get_personalities_conversation(conversation)
 
-# Iterate by utterance
-
-# Convert utterance to embeddings
-
-# Feed embeddings into the model
-
-# Get the features before the softmax
-
-# [Bonus] Convert features to VAD domain
-# Refer to the paper
-
-# Save features to dictionary
+     # Append to list
 
 # Save dictionary to either pickle or JSON
+# [Bonus] Save every utterance in a MongoDB record
