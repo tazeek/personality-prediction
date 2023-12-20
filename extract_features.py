@@ -12,7 +12,7 @@ import codecs
 import torch
 import sys
 
-def get_personality_features():
+def get_personality_features(embeddings, personality_models):
      
      # Iterate trait by trait
      # Get the features before the softmax
@@ -60,22 +60,36 @@ def load_finetuned_models():
 
     return models
 
-def get_personalities_conversation(conversation):
+def get_personalities_conversation(conversation, tokenizer, bert_model, personality_models):
      
-     for utterance in conversation:
+     for dialog in conversation:
           
         # Get the utterance
+        utterance = dialog['utterance']
 
         # Convert utterance to embeddings
+        embeddings = extract_bert_features(
+             utterance,
+             tokenizer,
+             bert_model,
+             512,
+             256
+        )
 
         # Feed embeddings into the model
         # Get 5 feature vectors
+        personality_features_dict = get_personality_features(
+             embeddings,
+             personality_models
+        )
 
         # [Bonus] Convert features to VAD domain
         # Refer to the paper
 
         # Save features to dictionary
-          ...
+        ...
+        
+     ...
 
 # Load the pre-trained models
 # - Big 5
