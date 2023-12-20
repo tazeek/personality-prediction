@@ -8,7 +8,7 @@ import utils.dataset_processors as dataset_processors
 import tensorflow as tf
 import json
 import codecs
-import torch
+import pickle
 import sys
 
 def get_personality_features(embeddings, personality_models):
@@ -38,9 +38,7 @@ def get_personality_features(embeddings, personality_models):
 
         # Get the features before the softmax
         personality_features[trait] = outputs[0][0][0]
-     
-     print(personality_features)
-     quit()
+
      return personality_features
 
 def load_dataset():
@@ -86,7 +84,8 @@ def load_finetuned_models():
 
 def get_personalities_conversation(conversation, tokenizer, bert_model, personality_models):
      
-     
+     new_conversation = []
+
      for dialog in conversation:
           
         # Get the utterance
@@ -113,9 +112,10 @@ def get_personalities_conversation(conversation, tokenizer, bert_model, personal
         # Refer to the paper
 
         # Save features to dictionary
-        ...
-        
-     ...
+        dialog['personality_features'] = personality_features_dict
+        new_conversation.append(dialog)
+
+     return new_conversation
 
 # Load the pre-trained models
 # - Big 5
@@ -130,6 +130,8 @@ models_ocean = load_finetuned_models()
 print("Loading dataset")
 dataset = load_dataset()
 
+personality_conv_dataset = []
+
 # Iterate by conversation
 for index, conversation in enumerate(dataset):
      
@@ -140,12 +142,17 @@ for index, conversation in enumerate(dataset):
           bert_model,
           models_ocean
     )
-    break
 
     # Append to list
+    personality_conv_dataset.append(personalized_conversation_dict)
+
+    # Remove this once experiment is over for full power
+    break
 
     if (index + 1) % 100 == 0:
           print(f"{index + 1} conversations processed")
 
 # Save dictionary to either pickle or JSON
 # [Bonus] Save every utterance in a MongoDB record
+with open('new_dataset.pkl', 'wb') as file:
+    pickle.dump(personality_conv_dataset, file)
