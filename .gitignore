@@ -6,5 +6,4 @@ explogs/
 data/pandora
 *.sbatch
 
-playground.ipynb
 dataset_erc/
