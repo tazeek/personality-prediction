@@ -1,4 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from sklearn.model_selection import StratifiedKFold
+from sota_list import *
 
 import utils.dataset_processors as dataset_processors
 
@@ -8,9 +10,9 @@ tokenizer = AutoTokenizer.from_pretrained('fine-tuned-bert-personality-sentence-
 
 # Load the dataset and pre-process
 # Split using K-Fold cross validation (4)
-# Load the dataset
 datafile = "data/essays/essays.csv"
 dataset = dataset_processors.load_essays_df(datafile)
+skf = StratifiedKFold(n_splits=4, shuffle=False)
 
 # Prepare the training parameters
 learning_rate = 0.001

@@ -3,7 +3,7 @@ import torch.nn as nn
 
 # Create CNN model
 class CNN(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, output_size):
         super(CNN, self).__init__()
 
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(1, 3))
@@ -36,7 +36,6 @@ class LSTMNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(LSTMNetwork, self).__init__()
 
-
         self.hidden_size = hidden_size
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
@@ -64,7 +63,6 @@ class GRUNetwork(nn.Module):
         super(GRUNetwork, self).__init__()
 
         self.hidden_size = hidden_size
-
         self.gru = nn.GRU(input_size, hidden_size, num_layers=2, batch_first=True)
 
         self.fc1 = nn.Linear(hidden_size, 64)
