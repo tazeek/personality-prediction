@@ -47,3 +47,16 @@ class MyMapDataset(Dataset):
 
     def __getitem__(self, idx):
         return (self.author_ids[idx], self.input_ids[idx], self.targets[idx])
+    
+
+class FineTunedDataset(Dataset):
+    def __init__(self, cls_features, labels):
+        self._features = cls_features
+        self._labels = labels
+    
+    def __len__(self):
+        return len(self._labels)
+    
+    def __getitem__(self, idx):
+        return (self._features[idx], self._labels[idx])
+
