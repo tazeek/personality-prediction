@@ -50,7 +50,10 @@ class MyMapDataset(Dataset):
     
 
 class FineTunedDataset(Dataset):
-    def __init__(self, cls_features, labels):
+    def __init__(self, cls_features, labels, DEVICE):
+        cls_features = cls_features.to(DEVICE)
+        labels = labels.to(DEVICE)
+
         self._features = cls_features
         self._labels = labels
     

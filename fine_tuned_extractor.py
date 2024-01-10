@@ -26,7 +26,8 @@ def prepare_data(row):
 
     with torch.no_grad():
         bert_output = model(**encoded_essay)
-        cls_embedding = bert_output.hidden_states[-1][:, 0, :][0]
+        cls_embedding = bert_output.hidden_states[-1]
+        #cls_embedding = bert_output.hidden_states[-1][:, 0, :][0]
 
     # Merge the labels
     merged_labels = [row[key] for key in row.keys() if key in labels]
@@ -43,10 +44,10 @@ cls_features = []
 merged_labels = []
 
 for index, row in dataset.iterrows():
-    bert_output, labels = prepare_data(row)
+    bert_output, multi_labels = prepare_data(row)
 
     cls_features.append(bert_output)
-    merged_labels.append(labels)
+    merged_labels.append(multi_labels)
 
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
