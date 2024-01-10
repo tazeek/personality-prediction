@@ -1,9 +1,9 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoConfig
+
 from sklearn.model_selection import StratifiedKFold
 from sota_list import *
 
+import pickle
 import torch
-import utils.dataset_processors as dataset_processors
 
 # Load BERT tokenizer and model (fine-tuned)
 config = AutoConfig.from_pretrained('fine-tuned-bert-personality-sentence-segmentation', output_hidden_states =True)
@@ -12,9 +12,24 @@ tokenizer = AutoTokenizer.from_pretrained('fine-tuned-bert-personality-sentence-
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
+def load_data():
+
+    processed_data, labels = []
+
+    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
+        data = pickle.load(file)
+        processed_data, labels = list(zip(*data))
+
+    print(len(processed_data))
+    print(labels)
+    quit()
+    return processed_data, labels
+
 def load_model(model_name):
     return {
-        'cnn': CNN(5)
+        'cnn': CNN(5),
+        'lstm': LSTMNetwork(768,128,5),
+        'gru': GRUNetwork(768,128,5)
     }[model_name]
 
 def label_accuracy(y_true, y_pred):
@@ -27,51 +42,18 @@ def label_accuracy(y_true, y_pred):
 
     return label_accuracies
 
-def prepare_data(row):
-
-    # Tokenize sentence
-    essays = row['text']
-
-    # Encode them using the tokenizer
-    encoded_essay = tokenizer(essays, truncation = True, return_tensors='pt')
-
-    # Convert to embeddings via CLS token
-    cls_embedding = []
-
-    with torch.no_grad():
-        bert_output = model(**encoded_essay)
-        cls_embedding = bert_output.hidden_states[-1][:, 0, :][0]
-
-    # Merge the labels
-    merged_labels = [row[key] for key in row.keys() if key in labels]
-
-    # Return the sentence and label
-    return cls_embedding, merged_labels
-
-# Load the dataset and pre-process
+# Load the processed dataset
 # Split using K-Fold cross validation (4)
-datafile = "data/essays/essays.csv"
-dataset = dataset_processors.load_essays_df(datafile)
+data, labels = load_data()
 skf = StratifiedKFold(n_splits=4, shuffle=False)
-
-cls_features = []
-merged_labels = []
-
-for index, row in dataset.iterrows():
-    bert_output, labels = prepare_data(row)
-
-    cls_features.append(bert_output)
-    merged_labels.append(labels)
 
 # Prepare the training parameters
 learning_rate = 0.001
 batch_size = 32
 epochs = 20
 
-print(len(cls_features))
-print(merged_labels)
-
 # Load the model required: LSTM, GRU, CNN
+model = load_model('cnn')
 
 # Train the model
 
