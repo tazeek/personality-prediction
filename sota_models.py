@@ -79,8 +79,12 @@ epochs = 20
 count = 1
 print("Hyperparameters Initialized!\n")
 
-# Convert list to tensors
+# Convert to tensors
+data = torch.stack([sample for sample in data])
 labels = torch.tensor(labels)
+
+print(data)
+quit()
 
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
@@ -97,7 +101,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
     #train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
-    
+
     quit()
 
     # Create the dataloader
