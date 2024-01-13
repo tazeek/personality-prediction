@@ -2,6 +2,8 @@
 from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
+from pprint import pprint
+
 from sota_list import *
 from tqdm import tqdm
 from utils.data_utils import FineTunedDataset
@@ -11,8 +13,8 @@ import pickle
 import torch
 import torch.nn as nn
 
-labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
-id2label = {idx:label for idx,label in enumerate(labels)}
+person_labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+id2label = {idx:label for idx,label in enumerate(person_labels)}
 
 def load_data():
 
@@ -31,30 +33,29 @@ def load_model(model_name):
         'gru': GRUNetwork(768,128,5)
     }[model_name]
 
-def multi_label_metrics(pred_logits, gold_labels):
+def multi_label_metrics(probs, gold_labels):
 
     # Our threshold
     threshold = 0.5
 
-    # Apply sigmoid to logits
-    probs = nn.Sigmoid(pred_logits)
-
     # Convert predictions to integer predictions
+    probs = np.array(probs)
+    gold_labels = np.array(gold_labels)
+
     y_pred = np.zeros(probs.shape)
     y_pred[np.where(probs >= threshold)] = 1
 
     # Perform checking
     metrics = {
         f"{id2label[i]} - accuracy": accuracy_score(gold_labels[:, i], y_pred[:, i]) 
-        for i in range(len(labels))
+        for i in range(len(person_labels))
     }
 
-    overall_accuracy = accuracy_score(gold_labels, y_pred)
-
-    # Store and return as dictionary
-    #metrics['accuracy'] = overall_accuracy
-    
-    return None
+    metrics['overall_accuracy'] = accuracy_score(gold_labels, y_pred)
+    print("\n")
+    pprint(metrics)
+    print("\n")
+    return metrics
 
 def label_accuracy(y_true, y_pred):
 
@@ -86,11 +87,9 @@ labels = torch.FloatTensor(labels)
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
-    # Load the model required: LSTM, GRU, CNN
-    print(f"Starting Fold: {fold + 1}")
-
+    # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
-    model = load_model('cnn')
+    model = load_model('lstm')
     model.cuda()
 
     # Perform the split
@@ -110,7 +109,11 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     
     for epoch in range(0, epochs):
 
+        print(f"Starting Fold Number {fold + 1} (Epoch: {epoch})")
+
         # Train the model (Train data)
+        model.train()
+
         for batch in tqdm(train_loader, ncols = 50):
 
             data, gold_labels = batch
@@ -129,6 +132,10 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             optimizer.step()
         
         # Get the predictions and output (Test data)
+        model.eval()
+        predicted_output = []
+        gold_labels_list = []
+
         for batch in tqdm(test_loader, ncols=50):
 
             data, gold_labels = batch
@@ -136,15 +143,17 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             # Get output
             pred_labels = model(data)
 
-            # Display the metrics
-            
-        print("One epoch is done!")
-        quit()
-        ...
+             # Mount to CPU
+            pred_labels = pred_labels.cpu().detach().numpy()
+            gold_labels = gold_labels.cpu().detach().numpy()
 
-    # [TODO]: Model related
-    # - Get the accuracies for each label (average)
-    # - Get the overall accuracy
-    # - Check if it is higher than the next highest
-    # - Store the model in a dictionary
-    # - Save the best model
+            # Add to the list for metrics checking
+            predicted_output.extend(pred_labels)
+            gold_labels_list.extend(gold_labels)
+
+        # Display the metrics
+        metrics = multi_label_metrics(predicted_output, gold_labels_list)
+
+    
+    print("=" * 20)
+    print("\n")

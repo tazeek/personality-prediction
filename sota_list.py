@@ -47,19 +47,19 @@ class LSTMNetwork(nn.Module):
     def forward(self, x):
 
         # Initialize hidden state with zeros
-        h0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
-        c0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
+        #h0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
+        #c0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
 
         # Forward pass through LSTM
-        out, _ = self.lstm(x, (h0, c0))
+        out, _ = self.lstm(x)
 
         # Take output from the last time step
-        out = out[:, -1, :]
+        #out = out[:, -1, :]
 
         # Fully connected layer
-        out = self.fc(out)
+        logits = self.fc(out)
 
-        return out
+        return torch.sigmoid(logits)
 
 # Create GRU model
 class GRUNetwork(nn.Module):
