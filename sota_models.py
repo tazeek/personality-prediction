@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+id2label = {idx:label for idx,label in enumerate(labels)}
 
 def load_data():
 
@@ -36,29 +37,26 @@ def multi_label_metrics(pred_logits, gold_labels):
     threshold = 0.5
 
     # Apply sigmoid to logits
-    sigmoid = torch.nn.Sigmoid()
-    probs = sigmoid(torch.Tensor(pred_logits))
+    probs = nn.Sigmoid(pred_logits)
 
     # Convert predictions to integer predictions
     y_pred = np.zeros(probs.shape)
     y_pred[np.where(probs >= threshold)] = 1
 
-    # Compute metrics
-    y_true = gold_labels
+    # Perform checking
+    metrics = {
+        f"{id2label[i]} - accuracy": accuracy_score(gold_labels[:, i], y_pred[:, i]) 
+        for i in range(len(labels))
+    }
 
-    #metrics = {
-    #    f"{id2label[i]} - accuracy": accuracy_score(y_true[:, i], y_pred[:, i]) 
-    #    for i in range(len(labels))
-    #}
-
-    overall_accuracy = accuracy_score(y_true, y_pred)
+    overall_accuracy = accuracy_score(gold_labels, y_pred)
 
     # Store and return as dictionary
     #metrics['accuracy'] = overall_accuracy
     
     return None
 
-def label_accuracy(y_true, y_pred, labels):
+def label_accuracy(y_true, y_pred):
 
     # Element-wise comparison to find exact matches
     matches = torch.eq(y_true, y_pred)
@@ -78,6 +76,7 @@ print("Loaded the data! \n")
 learning_rate = 0.001
 batch_size = 32
 epochs = 20
+drop_last = True
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
@@ -98,14 +97,12 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
 
-    # Create the dataloader
-
     # Initialize DataLoader
     train_dataset = FineTunedDataset(train_data, train_labels)
     test_dataset = FineTunedDataset(test_data, test_labels)
 
-    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last)
 
     # Loss functions and optimizer
     criterion = nn.BCELoss()
@@ -113,20 +110,16 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     
     for epoch in range(0, epochs):
 
+        # Train the model (Train data)
         for batch in tqdm(train_loader, ncols = 50):
 
             data, gold_labels = batch
 
-            # Train the model (Train data)
-            # Pass in the first batch as testing
-            # Get output for each epoch
+            # Get output
             pred_labels = model(data)
             
             # Calculate the loss
             loss = criterion(pred_labels, gold_labels)
-            
-
-            # Display the metrics
 
             # Update the loss and gradients
             optimizer.zero_grad()
@@ -134,12 +127,19 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
             # Update optimizer
             optimizer.step()
-
-            print("CELL IS COMPLETE")
-            quit()
         
         # Get the predictions and output (Test data)
+        for batch in tqdm(test_loader, ncols=50):
 
+            data, gold_labels = batch
+
+            # Get output
+            pred_labels = model(data)
+
+            # Display the metrics
+            
+        print("One epoch is done!")
+        quit()
         ...
 
     # [TODO]: Model related

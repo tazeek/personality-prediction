@@ -6,17 +6,17 @@ class CNN(nn.Module):
     def __init__(self, output_size):
         super(CNN, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1, 3), padding = (2, 0))
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(1, 3))
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3))
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 1))
 
-        self.fc1 = nn.Linear(764, 128)
+        self.fc1 = nn.Linear(21392, 128)
         self.fc2 = nn.Linear(128, output_size)
 
     def forward(self, x):
 
         # Conv2D input: [batch_size, channels, height, width]
-        x = x.unsqueeze(1)
+        x = x.unsqueeze(0)
 
         x1 = torch.relu(self.conv1(x))
         x2 = torch.relu(self.conv2(x1))
