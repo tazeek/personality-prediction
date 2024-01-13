@@ -105,27 +105,36 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
-    for batch in tqdm(train_loader, ncols=50):
-        data, labels = batch
-        print(data)
-        print("\n\n")
-        print(labels)
-        quit()
-
     # Loss functions and optimizer
     criterion = nn.BCELoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    
+    for epoch in range(0, epochs):
 
-    print(iter(train_loader))
+        for batch in tqdm(train_loader, ncols = 50):
 
-    quit()
+            data, gold_labels = batch
 
-    # [TODO]: Training process
-    # - Pass in the first batch as testing
-    # - Update optimizer
-    # - Calculate the loss
-    # - Update the loss and gradients
-    # - Get output for each epoch
+            # Train the model (Train data)
+            # Pass in the first batch as testing
+            # Get output for each epoch
+            pred_labels = model(data)
+
+            # Display the metrics
+
+            # Calculate the loss
+            loss = criterion(pred_labels, gold_labels)
+
+            # Update the loss and gradients
+            optimizer.zero_grad()
+            loss.backward()
+
+            # Update optimizer
+            optimizer.step()
+        
+        # Get the predictions and output (Test data)
+
+        ...
 
     # [TODO]: Model related
     # - Get the accuracies for each label (average)
@@ -133,14 +142,3 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     # - Check if it is higher than the next highest
     # - Store the model in a dictionary
     # - Save the best model
-
-    for epoch in range(0, epochs):
-
-        # Train the model (Train data)
-
-        # Get the predictions and output (Test data)
-
-        # Display the metrics
-
-        # Save the model
-        ...
