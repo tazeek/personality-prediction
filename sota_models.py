@@ -120,7 +120,10 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             # Train the model (Train data)
             # Pass in the first batch as testing
             # Get output for each epoch
-            pred_labels = model(data)
+            y_pred = model(data)
+            print(y_pred.size())
+            print(y_pred)
+            print(gold_labels.size())
             quit()
 
             # Display the metrics

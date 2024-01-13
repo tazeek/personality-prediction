@@ -29,13 +29,11 @@ class CNN(nn.Module):
         #x = torch.cat((x1, x2, x3), dim=1) 
 
         # Flatten the tensor 
-        #x = x.view(x.size(0), -1)  
-        x = torch.relu(self.fc1(x))
-        print(x.size())
-        quit()
-        x = self.fc2(x)
+        x3 = x3.view(x3.size(0), -1) 
+        x3 = torch.relu(self.fc1(x3))
+        logits = self.fc2(x3)
 
-        return torch.sigmoid(x)
+        return torch.sigmoid(logits)
 
 # Create LSTM model
 class LSTMNetwork(nn.Module):
