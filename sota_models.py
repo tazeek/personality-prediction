@@ -90,7 +90,9 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     # Load the model required: LSTM, GRU, CNN
     print(f"Starting Fold: {fold + 1}")
 
+    # Create model and mount on GPU
     model = load_model('cnn')
+    model.cuda()
 
     # Perform the split
     train_data, test_data = data[train_index], data[test_index]
@@ -119,6 +121,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             # Pass in the first batch as testing
             # Get output for each epoch
             pred_labels = model(data)
+            quit()
 
             # Display the metrics
 
