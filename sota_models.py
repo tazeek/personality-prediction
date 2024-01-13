@@ -82,7 +82,7 @@ print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
 data = torch.stack([sample for sample in data])
-labels = torch.tensor(labels)
+labels = torch.FloatTensor(labels)
 
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
@@ -120,16 +120,13 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             # Train the model (Train data)
             # Pass in the first batch as testing
             # Get output for each epoch
-            y_pred = model(data)
-            print(y_pred.size())
-            print(y_pred)
-            print(gold_labels.size())
-            quit()
-
-            # Display the metrics
-
+            pred_labels = model(data)
+            
             # Calculate the loss
             loss = criterion(pred_labels, gold_labels)
+            
+
+            # Display the metrics
 
             # Update the loss and gradients
             optimizer.zero_grad()
@@ -137,6 +134,9 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
             # Update optimizer
             optimizer.step()
+
+            print("CELL IS COMPLETE")
+            quit()
         
         # Get the predictions and output (Test data)
 
