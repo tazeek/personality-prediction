@@ -1,13 +1,15 @@
 
 from sklearn.model_selection import KFold
-from torch.utils.data import SubsetRandomSampler
+from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 from sota_list import *
+from tqdm import tqdm
 from utils.data_utils import FineTunedDataset
 
 import numpy as np
 import pickle
 import torch
+import torch.nn as nn
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -76,7 +78,6 @@ print("Loaded the data! \n")
 learning_rate = 0.001
 batch_size = 32
 epochs = 20
-count = 1
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
@@ -90,27 +91,50 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     print(f"Starting Fold: {fold + 1}")
 
     model = load_model('cnn')
-    
-    #train_sampler = SubsetRandomSampler(train_index)
-    #test_sampler = SubsetRandomSampler(test_index)
 
     # Perform the split
     train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
 
-    print(len(train_data))
-    print(len(train_labels))
-    quit()
-
     # Create the dataloader
 
-    #train_dataset = FineTunedDataset()
-    #test_dataset = FineTunedDataset()
+    # Initialize DataLoader
+    train_dataset = FineTunedDataset(train_data, train_labels)
+    test_dataset = FineTunedDataset(test_data, test_labels)
 
-    #x_train, x_test = data[train_index], data[test_index]
-    #y_train, y_test = labels[train_index], labels[test_index]
+    train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
-    for epoch in range(0, epochs + 1):
+    for batch in tqdm(train_loader, ncols=50):
+        data, labels = batch
+        print(data)
+        print("\n\n")
+        print(labels)
+        quit()
+
+    # Loss functions and optimizer
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+
+    print(iter(train_loader))
+
+    quit()
+
+    # [TODO]: Training process
+    # - Pass in the first batch as testing
+    # - Update optimizer
+    # - Calculate the loss
+    # - Update the loss and gradients
+    # - Get output for each epoch
+
+    # [TODO]: Model related
+    # - Get the accuracies for each label (average)
+    # - Get the overall accuracy
+    # - Check if it is higher than the next highest
+    # - Store the model in a dictionary
+    # - Save the best model
+
+    for epoch in range(0, epochs):
 
         # Train the model (Train data)
 
