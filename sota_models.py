@@ -1,5 +1,6 @@
 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold
+from torch.utils.data import SubsetRandomSampler
 from sklearn.metrics import accuracy_score
 from sota_list import *
 from utils.data_utils import FineTunedDataset
@@ -18,9 +19,6 @@ def load_data():
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
-    print(len(processed_data))
-    print(labels)
-    quit()
     return processed_data, labels
 
 def load_model(model_name):
@@ -46,17 +44,17 @@ def multi_label_metrics(pred_logits, gold_labels):
     # Compute metrics
     y_true = gold_labels
 
-    metrics = {
-        f"{id2label[i]} - accuracy": accuracy_score(y_true[:, i], y_pred[:, i]) 
-        for i in range(len(labels))
-    }
+    #metrics = {
+    #    f"{id2label[i]} - accuracy": accuracy_score(y_true[:, i], y_pred[:, i]) 
+    #    for i in range(len(labels))
+    #}
 
     overall_accuracy = accuracy_score(y_true, y_pred)
 
     # Store and return as dictionary
-    metrics['accuracy'] = overall_accuracy
+    #metrics['accuracy'] = overall_accuracy
     
-    return metrics
+    return None
 
 def label_accuracy(y_true, y_pred, labels):
 
@@ -71,29 +69,49 @@ def label_accuracy(y_true, y_pred, labels):
 # Load the processed dataset
 # Split using K-Fold cross validation (4)
 data, labels = load_data()
-skf = StratifiedKFold(n_splits=4, shuffle=False)
+skf = KFold(n_splits=4, shuffle=False)
+print("Loaded the data! \n")
 
 # Prepare the training parameters
 learning_rate = 0.001
 batch_size = 32
 epochs = 20
-
-# Load the model required: LSTM, GRU, CNN
-model = load_model('cnn')
+count = 1
+print("Hyperparameters Initialized!\n")
 
 # Split between train and test
+for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
-# Create the dataloader
+    # Load the model required: LSTM, GRU, CNN
+    print(f"Starting Fold: {fold + 1}")
 
-train_dataset = FineTunedDataset()
-test_dataset = FineTunedDataset()
+    model = load_model('cnn')
+    
+    train_sampler = SubsetRandomSampler(train_index)
+    test_sampler = SubsetRandomSampler(test_index)
 
-# Train the model
+    print(train_sampler)
+    print(test_sampler)
 
-# Get the predictions and output
+    print(len(train_sampler))
+    print(len(test_sampler))
+    quit()
 
-# Display the metrics
+    # Create the dataloader
 
-# Save the model
+    #train_dataset = FineTunedDataset()
+    #test_dataset = FineTunedDataset()
 
+    #x_train, x_test = data[train_index], data[test_index]
+    #y_train, y_test = labels[train_index], labels[test_index]
 
+    for epoch in range(0, epochs + 1):
+
+        # Train the model (Train data)
+
+        # Get the predictions and output (Test data)
+
+        # Display the metrics
+
+        # Save the model
+        ...
