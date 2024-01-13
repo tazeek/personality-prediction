@@ -15,7 +15,7 @@ def load_data():
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
+    with open('fine_tuned_normal.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -79,6 +79,9 @@ epochs = 20
 count = 1
 print("Hyperparameters Initialized!\n")
 
+# Convert list to tensors
+labels = torch.tensor(labels)
+
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
@@ -87,14 +90,14 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
     model = load_model('cnn')
     
-    train_sampler = SubsetRandomSampler(train_index)
-    test_sampler = SubsetRandomSampler(test_index)
+    #train_sampler = SubsetRandomSampler(train_index)
+    #test_sampler = SubsetRandomSampler(test_index)
 
-    print(train_sampler)
-    print(test_sampler)
+    # Perform the split
 
-    print(len(train_sampler))
-    print(len(test_sampler))
+    #train_data, test_data = data[train_index], data[test_index]
+    train_labels, test_labels = labels[train_index], labels[test_index]
+    
     quit()
 
     # Create the dataloader
