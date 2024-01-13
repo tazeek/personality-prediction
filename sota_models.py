@@ -83,9 +83,6 @@ print("Hyperparameters Initialized!\n")
 data = torch.stack([sample for sample in data])
 labels = torch.tensor(labels)
 
-print(data)
-quit()
-
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
@@ -98,10 +95,11 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     #test_sampler = SubsetRandomSampler(test_index)
 
     # Perform the split
-
-    #train_data, test_data = data[train_index], data[test_index]
+    train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
 
+    print(len(train_data))
+    print(len(train_labels))
     quit()
 
     # Create the dataloader
