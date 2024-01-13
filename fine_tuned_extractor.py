@@ -7,9 +7,9 @@ import pickle
 import utils.dataset_processors as dataset_processors
 
 # Load BERT tokenizer and model (fine-tuned)
-config = AutoConfig.from_pretrained('fine-tuned-bert-personality-sentence-segmentation', output_hidden_states =True)
-model = AutoModelForSequenceClassification.from_pretrained('fine-tuned-bert-personality-sentence-segmentation', config=config)
-tokenizer = AutoTokenizer.from_pretrained('fine-tuned-bert-personality-sentence-segmentation')
+config = AutoConfig.from_pretrained('fine-tuned-bert-personality', output_hidden_states =True)
+model = AutoModelForSequenceClassification.from_pretrained('fine-tuned-bert-personality', config=config)
+tokenizer = AutoTokenizer.from_pretrained('fine-tuned-bert-personality')
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -26,9 +26,13 @@ def prepare_data(row):
 
     with torch.no_grad():
         bert_output = model(**encoded_essay)
-        cls_embedding = bert_output.hidden_states[-1]
-        #cls_embedding = bert_output.hidden_states[-1][:, 0, :][0]
-
+        
+        # CLS Token extraction
+        # - Last layer
+        # - Shape (Batch size x Number of tokens x Number of features)
+        # - CLS for single sample: 0, 0, all 768
+        cls_embedding = bert_output.hidden_states[-1][0,0,:]
+        
     # Merge the labels
     merged_labels = [row[key] for key in row.keys() if key in labels]
 
@@ -52,5 +56,5 @@ for index, row in dataset.iterrows():
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
 
-with open('fine_tuned_sentence_segmentation.pkl', 'wb') as f:
+with open('fine_tuned_normal.pkl', 'wb') as f:
     pickle.dump(zip(cls_features, merged_labels), f)
