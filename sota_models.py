@@ -3,11 +3,13 @@ from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, f1_score
 from pprint import pprint
+from torch import cuda
 
 from sota_list import *
 from tqdm import tqdm
 from utils.data_utils import FineTunedDataset
 
+import random
 import numpy as np
 import pickle
 import torch
@@ -20,7 +22,7 @@ def load_data():
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_normal.pkl', 'rb') as file:
+    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -72,10 +74,19 @@ def multi_label_metrics(probs, gold_labels):
 
     return metrics_dict
 
+# Fix random state
+seed = 42
+np.random.seed(seed)
+random.seed(seed)
+cuda.manual_seed(seed)
+cuda.manual_seed_all(seed)
+torch.manual_seed(seed)
+torch.random.manual_seed(seed)
+
 # Load the processed dataset
 # Split using K-Fold cross validation (4)
 data, labels = load_data()
-skf = KFold(n_splits=4, shuffle=False)
+skf = KFold(n_splits=4, shuffle=True, random_state=seed)
 print("Loaded the data! \n")
 
 # Prepare the training parameters
@@ -181,5 +192,13 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     print("=" * 20)
     print("\n")
 
+    del model
+
+# Average them out (Divide by 4, since it is 4-fold)
+full_metrics = {
+    key: float(full_metrics.get(key, 0)/4)
+    for key in full_metrics.keys()
+}
 # Display here
-print(full_metrics)
+print("OVERALL AFTER AVERAGING\n")
+pprint(full_metrics)

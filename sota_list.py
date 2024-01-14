@@ -44,7 +44,7 @@ class LSTMNetwork(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
 
-    def forward(self, x):
+    def features_extraction(self, x):
 
         # Initialize hidden state with zeros
         #h0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
@@ -56,8 +56,12 @@ class LSTMNetwork(nn.Module):
         # Take output from the last time step
         #out = out[:, -1, :]
 
+        return out
+
+    def forward(self, x):
+
         # Fully connected layer
-        logits = self.fc(out)
+        logits = self.fc(self.features_extraction(x))
 
         return torch.sigmoid(logits)
 
@@ -72,23 +76,30 @@ class GRUNetwork(nn.Module):
         self.fc1 = nn.Linear(hidden_size, 64)
         self.fc2 = nn.Linear(64, output_size)
 
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU()
 
-    def forward(self, x):
+    def features_extraction(self, x):
         # Initialize hidden state with zeros
         # 2 for 2 layers
-        h0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device)  
+        #h0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device)  
 
         # Forward pass through GRU
-        out, _ = self.gru(x, h0)
+        out, _ = self.gru(x)
 
         # Take output from the last time step
-        out = out[:, -1, :]
+        #out = out[:, -1, :]
 
         # Fully connected layers
         out = self.fc1(out)
-        out = self.relu(out)
-        out = self.fc2(out)
 
         return out
+
+    def forward(self, x):
+
+        # Fully connected layers
+        out = self.features_extraction(x)
+        out = self.relu(out)
+        logits = self.fc2(out)
+
+        return torch.sigmoid(logits)
 
