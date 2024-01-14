@@ -47,21 +47,35 @@ def load_dataset(portion_set):
 def perform_extraction(conversation, tokenizer, bert_model, perso_model):
 
     new_conversation = []
-    
+    print("\n\n")
+
     for dialog in conversation:
 
         # Get the utterance
         utterance = dialog['utterance']
-        
+        print(utterance)
+
         # Perform tokenization
+        encoded_utterance = tokenizer(
+            utterance,
+            truncation = True,
+            return_tensors = 'pt'
+        )
 
-        # Get the BERT output
+        with torch.no_grad():
+            
+            # Get the BERT output
+            bert_output = bert_model(**encoded_utterance)
 
-        # Extract the CLS token
+            # Extract the CLS token
+            cls_embedding = bert_output.hidden_states[-1][0,0,:]
+            cls_embedding = cls_embedding.unsqueeze(0)
 
-        # Push it to the model
+            # Push it to the model
+            features = perso_model.features_extraction(cls_embedding)
 
-        # Append the output
+            # Append the output
+            new_conversation.extend(features.tolist())
     
     return new_conversation
 
@@ -75,6 +89,7 @@ print("Loading model")
 model_type = 'lstm'
 train_type = 'segmented'
 persona_model = load_pretrained_model(model_type, train_type)
+persona_model.eval()
 
 # Load the DailyDialog dataset
 print("Loading dataset")
@@ -87,17 +102,19 @@ personality_dataset = []
 for index, conversation in enumerate(dataset):
 
     # Iterate by utterance
-    personalized_conversation_dict = perform_extraction(
+    personality_list = perform_extraction(
         conversation,
         tokenizer,
         model,
         persona_model
     )
 
+    print(len(personality_list))
+
     quit()
 
     # Append to list
-    personality_dataset.append(personalized_conversation_dict)
+    personality_dataset.append(personality_list)
 
     if (index + 1) % 100 == 0:
         print(f"{index+1} conversations processed")
@@ -107,4 +124,4 @@ for index, conversation in enumerate(dataset):
 file_name = f"{portion_set}_{model_type}_{train_type}.pkl"
 
 with open(file_name, 'wb') as file:
-    pickle.dump(personality_conv_dataset, file)
+    pickle.dump(personality_dataset, file)
