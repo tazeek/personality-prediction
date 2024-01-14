@@ -86,7 +86,8 @@ torch.random.manual_seed(seed)
 # Load the processed dataset
 # Split using K-Fold cross validation (4)
 data, labels = load_data()
-skf = KFold(n_splits=4, shuffle=True, random_state=seed)
+folds = 10
+skf = KFold(n_splits=folds, shuffle=True, random_state=seed)
 print("Loaded the data! \n")
 
 # Prepare the training parameters
@@ -194,9 +195,9 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
     del model
 
-# Average them out (Divide by 4, since it is 4-fold)
+# Average them out by the number of folds
 full_metrics = {
-    key: float(full_metrics.get(key, 0)/4)
+    key: float(full_metrics.get(key, 0)/folds)
     for key in full_metrics.keys()
 }
 # Display here
