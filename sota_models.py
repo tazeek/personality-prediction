@@ -22,7 +22,7 @@ def load_data():
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
+    with open('fine_tuned_normal.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -103,6 +103,9 @@ data = torch.stack([sample for sample in data])
 labels = torch.FloatTensor(labels)
 
 # Full dictionary
+highest_overall_accuracy = 0
+best_model_metrics = {}
+best_model = None
 full_metrics = {}
 
 # Split between train and test
@@ -189,6 +192,12 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
         key: full_metrics.get(key, 0) + new_metrics.get(key, 0) 
         for key in new_metrics.keys()
     }
+
+    # Find the best model
+    if full_metrics['overall_accuracy'] > highest_overall_accuracy:
+        highest_overall_accuracy = full_metrics['overall_accuracy']
+        best_model = model
+        best_model_metrics = full_metrics
     
     print("=" * 20)
     print("\n")
@@ -200,6 +209,13 @@ full_metrics = {
     key: float(full_metrics.get(key, 0)/folds)
     for key in full_metrics.keys()
 }
+
 # Display here
 print("OVERALL AFTER AVERAGING\n")
 pprint(full_metrics)
+
+print("\nBest model metrics:\n")
+pprint(best_model_metrics)
+
+print("\nBest model\n")
+print(best_model)
