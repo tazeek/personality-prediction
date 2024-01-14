@@ -93,10 +93,12 @@ cuda.manual_seed_all(seed)
 torch.manual_seed(seed)
 torch.random.manual_seed(seed)
 
-# Load the processed dataset
+# Load the processed dataset (Options: normal, segmented)
+file_name = 'segmented'
+data, labels = load_data(file_name)
+
 # Split using K-Fold cross validation (4)
-data, labels = load_data()
-folds = 10
+folds = 4
 skf = KFold(n_splits=folds, shuffle=True, random_state=seed)
 print("Loaded the data! \n")
 
@@ -146,6 +148,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     for epoch in range(0, epochs):
 
         print(f"Starting Fold Number {fold + 1} (Epoch: {epoch + 1})")
+        total_loss = 0.0
 
         # Train the model (Train data)
         model.train()
@@ -163,6 +166,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             
             # Calculate the loss
             loss = criterion(pred_labels, gold_labels)
+            total_loss += loss.cpu().item()
 
             # Update the loss and gradients
             optimizer.zero_grad()
@@ -197,6 +201,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
         # Display the metrics
         new_metrics = multi_label_metrics(predicted_output, gold_labels_list)
+        print(f"Total loss: {total_loss}\n\n")
 
     # We only take the last metric update
     full_metrics = {
