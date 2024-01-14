@@ -60,16 +60,6 @@ def multi_label_metrics(probs, gold_labels):
     print("\n")
     return metrics
 
-def label_accuracy(y_true, y_pred):
-
-    # Element-wise comparison to find exact matches
-    matches = torch.eq(y_true, y_pred)
-
-    # Calculate accuracy for each label
-    label_accuracies = matches.float().mean(dim=0).tolist()
-
-    return label_accuracies
-
 # Load the processed dataset
 # Split using K-Fold cross validation (4)
 data, labels = load_data()
@@ -81,6 +71,7 @@ learning_rate = 0.001
 batch_size = 32
 epochs = 20
 drop_last = True
+model_name = 'cnn'
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
@@ -92,7 +83,8 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
     # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
-    model = load_model('cnn')
+    print(f"Initializing model: {model_name}\n\n")
+    model = load_model(model_name)
     model.cuda()
 
     # Perform the split
@@ -119,15 +111,14 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
         for batch in tqdm(train_loader, ncols = 50):
 
-            data, gold_labels = batch
+            sample_data, gold_labels = batch
 
-            # TODO: 
             # - Mount the data and labels to GPU here
-            data = data.cuda()
+            data = sample_data.cuda()
             gold_labels = gold_labels.cuda()
 
             # Get output
-            pred_labels = model(data)
+            pred_labels = model(sample_data)
             
             # Calculate the loss
             loss = criterion(pred_labels, gold_labels)
@@ -141,21 +132,23 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
         
         # Get the predictions and output (Test data)
         model.eval()
+
         predicted_output = []
         gold_labels_list = []
 
         for batch in tqdm(test_loader, ncols=50):
 
-            data, gold_labels = batch
+            sample_data, gold_labels = batch
 
             # Mount the data and labels to GPU here
-            data = data.cuda()
+            #sample_data = sample_data.cuda()
 
             # Get output
-            pred_labels = model(data)
+            pred_labels = model(sample_data)
 
              # Mount the predictions to CPU
-            pred_labels = pred_labels.cpu().detach().numpy()
+            #pred_labels = pred_labels.cpu().detach().numpy()
+            pred_labels = pred_labels.detach().numpy()
             gold_labels = np.array(gold_labels)
 
             # Add to the list for metrics checking
