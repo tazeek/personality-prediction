@@ -18,11 +18,21 @@ import torch.nn as nn
 person_labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 id2label = {idx:label for idx,label in enumerate(person_labels)}
 
-def load_data():
+def file_name_mapper(file_name):
+    return {
+        'normal': 'fine_tuned_normal',
+        'segmented': 'fine_tuned_sentence_segmentation'
+    }[file_name]
+
+def load_data(file_name):
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_normal.pkl', 'rb') as file:
+    # Get the file name
+    file_name = file_name_mapper(file_name)
+    print(f"Loading file: {file_name}.pkl\n")
+
+    with open(f'{file_name}.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -105,6 +115,7 @@ labels = torch.FloatTensor(labels)
 # Full dictionary
 highest_overall_accuracy = 0
 best_model_metrics = {}
+best_model_fold = None
 best_model = None
 full_metrics = {}
 
@@ -197,7 +208,8 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     if full_metrics['overall_accuracy'] > highest_overall_accuracy:
         highest_overall_accuracy = full_metrics['overall_accuracy']
         best_model = model
-        best_model_metrics = full_metrics
+        best_model_metrics = new_metrics
+        best_model_fold = fold
     
     print("=" * 20)
     print("\n")
@@ -214,7 +226,7 @@ full_metrics = {
 print("OVERALL AFTER AVERAGING\n")
 pprint(full_metrics)
 
-print("\nBest model metrics:\n")
+print(f"\nBest model metrics is in Fold {best_model_fold + 1}:\n")
 pprint(best_model_metrics)
 
 print("\nBest model\n")
