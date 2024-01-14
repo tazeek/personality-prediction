@@ -1,7 +1,7 @@
 
 from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 from pprint import pprint
 
 from sota_list import *
@@ -20,7 +20,7 @@ def load_data():
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
+    with open('fine_tuned_normal.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -46,19 +46,31 @@ def multi_label_metrics(probs, gold_labels):
     y_pred[np.where(probs >= threshold)] = 1
 
     # TODO: 
-    # - Check for F1 metrics
+    metrics_dict = {}
+    for i in range(len(person_labels)):
+
+        key = f"{id2label[i]}"
+
+        # Check for F1
+        metrics_dict[f"{key} - f1"] = f1_score(gold_labels[:, i], y_pred[:, i])
+
+        # Check for accuracy
+        metrics_dict[f"{key} - accuracy"] = accuracy_score(gold_labels[:, i], y_pred[:, i])
 
     # Perform checking
-    metrics = {
-        f"{id2label[i]} - accuracy": accuracy_score(gold_labels[:, i], y_pred[:, i]) 
-        for i in range(len(person_labels))
-    }
+    #metrics = {
+    #    f"{id2label[i]} - accuracy": accuracy_score(gold_labels[:, i], y_pred[:, i]) 
+    #    for i in range(len(person_labels))
+    #}
 
-    metrics['overall_accuracy'] = accuracy_score(gold_labels, y_pred)
+    metrics_dict['overall_accuracy'] = accuracy_score(gold_labels, y_pred)
+    metrics_dict['overall_f1'] = f1_score(gold_labels, y_pred, average='micro')
+
     print("\n")
-    pprint(metrics)
+    pprint(metrics_dict)
     print("\n")
-    return metrics
+
+    return metrics_dict
 
 # Load the processed dataset
 # Split using K-Fold cross validation (4)
@@ -71,12 +83,15 @@ learning_rate = 0.001
 batch_size = 32
 epochs = 20
 drop_last = True
-model_name = 'cnn'
+model_name = 'gru'
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
 data = torch.stack([sample for sample in data])
 labels = torch.FloatTensor(labels)
+
+# Full dictionary
+full_metrics = {}
 
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
@@ -104,7 +119,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     
     for epoch in range(0, epochs):
 
-        print(f"Starting Fold Number {fold + 1} (Epoch: {epoch})")
+        print(f"Starting Fold Number {fold + 1} (Epoch: {epoch + 1})")
 
         # Train the model (Train data)
         model.train()
@@ -114,7 +129,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             sample_data, gold_labels = batch
 
             # - Mount the data and labels to GPU here
-            data = sample_data.cuda()
+            sample_data = sample_data.cuda()
             gold_labels = gold_labels.cuda()
 
             # Get output
@@ -141,14 +156,13 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             sample_data, gold_labels = batch
 
             # Mount the data and labels to GPU here
-            #sample_data = sample_data.cuda()
+            sample_data = sample_data.cuda()
 
             # Get output
             pred_labels = model(sample_data)
 
              # Mount the predictions to CPU
-            #pred_labels = pred_labels.cpu().detach().numpy()
-            pred_labels = pred_labels.detach().numpy()
+            pred_labels = pred_labels.cpu().detach().numpy()
             gold_labels = np.array(gold_labels)
 
             # Add to the list for metrics checking
@@ -156,8 +170,16 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             gold_labels_list.extend(gold_labels)
 
         # Display the metrics
-        metrics = multi_label_metrics(predicted_output, gold_labels_list)
+        new_metrics = multi_label_metrics(predicted_output, gold_labels_list)
 
+    # We only take the last metric update
+    full_metrics = {
+        key: full_metrics.get(key, 0) + new_metrics.get(key, 0) 
+        for key in new_metrics.keys()
+    }
     
     print("=" * 20)
     print("\n")
+
+# Display here
+print(full_metrics)
