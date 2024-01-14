@@ -1,6 +1,7 @@
 
 from transformers import BertTokenizer, BertModel
 from pathlib import Path
+#from pymongo import MongoClient, UpdateOne
 from keras import backend as K
 from unseen_predictor import extract_bert_features
 
@@ -10,6 +11,25 @@ import json
 import codecs
 import pickle
 import sys
+import time
+
+"""
+def get_database_connector(collection_name):
+    cluster = MongoClient()
+    database = cluster['PersonalityFeatures']
+    collection =  database[collection_name]
+
+    return collection
+"""
+
+def store_database(collection, data):
+
+    # Update the operations list
+    operations_list = []
+
+    collection.bulk_write(operations_list)
+
+    return None
 
 def get_personality_features(embeddings, personality_models):
      
@@ -17,19 +37,6 @@ def get_personality_features(embeddings, personality_models):
 
      # Iterate trait by trait
      for trait, model in personality_models.items():
-         
-        #inp = model.input
-        #outputs = [layer.output for layer in model.layers]
-        #functors = [
-        #     K.function([inp, K.learning_phase()], [out])
-        #     for out in outputs
-
-        #]
-
-        #layer_outs = [
-        #    func([embeddings, 0.])
-        #    for func in functors
-        #]
 
         outputs = [
             K.function([model.input],[layer.output])([embeddings])
@@ -43,7 +50,7 @@ def get_personality_features(embeddings, personality_models):
 
 def load_dataset():
      
-    file_directory = 'dataset_erc\dailydialogue\dev.json'
+    file_directory = "dataset_erc/dailydialogue/dev.json"
 
     train_file = []
 
@@ -110,12 +117,29 @@ def get_personalities_conversation(conversation, tokenizer, bert_model, personal
 
         # [Bonus] Convert features to VAD domain
         # Refer to the paper
+        valence_embedding = (personality_features_dict['EXT'] * 0.21) + \
+            (personality_features_dict['AGR'] * 0.59) + \
+            (personality_features_dict['NEU'] * 0.19)
+        
+        arousal_embedding = (personality_features_dict['OPN'] * 0.15) + \
+            (personality_features_dict['AGR'] * 0.30) - \
+            (personality_features_dict['NEU'] * 0.57)
+        
+        dominance_embedding = (personality_features_dict['OPN'] * 0.25) + \
+            (personality_features_dict['CON'] * 0.17) + \
+            (personality_features_dict['EXT'] * 0.60) - \
+            (personality_features_dict['AGR'] * 0.32)
+        
+        personality_features_dict['valence'] = valence_embedding
+        personality_features_dict['arousal'] = arousal_embedding
+        personality_features_dict['dominance'] = dominance_embedding
 
         # Save features to dictionary
         dialog['personality_features'] = personality_features_dict
         new_conversation.append(dialog)
 
      return new_conversation
+
 
 # Load the pre-trained models
 # - Big 5
@@ -133,6 +157,7 @@ dataset = load_dataset()
 personality_conv_dataset = []
 
 # Iterate by conversation
+start = time.time()
 for index, conversation in enumerate(dataset):
      
     # Iterate by utterance
@@ -146,13 +171,13 @@ for index, conversation in enumerate(dataset):
     # Append to list
     personality_conv_dataset.append(personalized_conversation_dict)
 
-    # Remove this once experiment is over for full power
-    break
-
     if (index + 1) % 100 == 0:
           print(f"{index + 1} conversations processed")
 
+time_taken = time.time() - start
+print(f"Total time taken: {time_taken:.3f} seconds")
+
 # Save dictionary to either pickle or JSON
 # [Bonus] Save every utterance in a MongoDB record
-with open('new_dataset.pkl', 'wb') as file:
+with open('dev_dataset_vad.pkl', 'wb') as file:
     pickle.dump(personality_conv_dataset, file)
