@@ -20,7 +20,7 @@ def load_data():
 
     processed_data, labels = [], []
 
-    with open('fine_tuned_normal.pkl', 'rb') as file:
+    with open('fine_tuned_sentence_segmentation.pkl', 'rb') as file:
         data = pickle.load(file)
         processed_data, labels = list(zip(*data))
 
@@ -44,6 +44,9 @@ def multi_label_metrics(probs, gold_labels):
 
     y_pred = np.zeros(probs.shape)
     y_pred[np.where(probs >= threshold)] = 1
+
+    # TODO: 
+    # - Check for F1 metrics
 
     # Perform checking
     metrics = {
@@ -89,7 +92,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
     # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
-    model = load_model('lstm')
+    model = load_model('cnn')
     model.cuda()
 
     # Perform the split
@@ -118,6 +121,11 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
             data, gold_labels = batch
 
+            # TODO: 
+            # - Mount the data and labels to GPU here
+            data = data.cuda()
+            gold_labels = gold_labels.cuda()
+
             # Get output
             pred_labels = model(data)
             
@@ -140,12 +148,15 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
 
             data, gold_labels = batch
 
+            # Mount the data and labels to GPU here
+            data = data.cuda()
+
             # Get output
             pred_labels = model(data)
 
-             # Mount to CPU
+             # Mount the predictions to CPU
             pred_labels = pred_labels.cpu().detach().numpy()
-            gold_labels = gold_labels.cpu().detach().numpy()
+            gold_labels = np.array(gold_labels)
 
             # Add to the list for metrics checking
             predicted_output.extend(pred_labels)
