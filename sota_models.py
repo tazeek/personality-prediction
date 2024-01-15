@@ -107,7 +107,7 @@ learning_rate = 0.001
 batch_size = 32
 epochs = 20
 drop_last = True
-model_name = 'gru'
+model_name = 'lstm'
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
@@ -209,7 +209,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
         for key in new_metrics.keys()
     }
 
-    # Find the best model
+    # Find the best model via accuracy check
     if full_metrics['overall_accuracy'] > highest_overall_accuracy:
         highest_overall_accuracy = full_metrics['overall_accuracy']
         best_model = model
@@ -236,3 +236,9 @@ pprint(best_model_metrics)
 
 print("\nBest model\n")
 print(best_model)
+
+# Save the model
+best_model_name = f"finetuned_saved_models/{model_name}_{file_name}.pth"
+print(f"Model name is: {best_model_name}")
+#torch.save(best_model.state_dict(), best_model_name)
+
