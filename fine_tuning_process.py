@@ -1,15 +1,37 @@
 
 
-# Load the LLM model to optimize
+def load_default_hyperparams(args):
 
-# Load the dataset to optimize on
+    ...
 
-# Define the type of approach (sentence or whole)
 
-# Split the dataset between train and test
+def load_llm_model(model_name):
 
-# Hyperparameters for LLM
+    # Load tokenizer and model
 
-# Fine-tuning starts here
+    ...
+
+def load_dataset(dataset_name):
+
+    # Load
+
+    # Process
+
+def splitting(dataset, ratio_split):
+
+    ...
+
+def transform(tokenizer, dataset):
+
+    ...
+
+def fine_tuning_approach(approach_style, dataset):
+
+    # Whole sentence
+
+    # Sentence
+
+def start_fine_tuning(model, epochs, train_set, test_set):
+    ...
 
 
