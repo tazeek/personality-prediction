@@ -7,7 +7,7 @@ def load_default_hyperparams():
     parser = argparse.ArgumentParser()
 
     # Model related
-    parser.add_argument("--pretrained_model", "-pm", type=str, default="bert"
+    parser.add_argument("--pretrained_model", "-pm", type=str, default="bert",
         choices=["bert", "roberta", "xlnet", "electra", "albert"])
     
     # Hyperparameters for fine-tuning
