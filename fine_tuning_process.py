@@ -1,6 +1,13 @@
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
 
+import utils.dataset_processors as dataset_processors
+
 import argparse
+
+def _dataset_directory(name):
+    return {
+        'essays': "data/essays/essays.csv"
+    }[name]
 
 def load_default_hyperparams():
 
@@ -46,10 +53,11 @@ def load_llm_model(model_name):
 
 def load_dataset(dataset_name):
 
-    # Load
+    # Load the dataset
+    file_location = _dataset_directory(dataset_name)
+    dataset = dataset_processors.load_essays_df(file_location, False)
 
-    # Process
-    ...
+    return dataset
 
 def splitting(dataset, ratio_split):
 

@@ -28,7 +28,7 @@ def preprocess_text(sentence):
     return sentence
 
 
-def load_essays_df(datafile):
+def load_essays_df(datafile, show_count=False):
     with open(datafile, "rt") as csvf:
         csvreader = csv.reader(csvf, delimiter=",", quotechar='"')
 
@@ -61,12 +61,13 @@ def load_essays_df(datafile):
 
             df = pd.concat([df, new_row], ignore_index=True)
 
-    print("EXT : ", df["EXT"].value_counts())
-    print("NEU : ", df["NEU"].value_counts())
-    print("AGR : ", df["AGR"].value_counts())
-    print("CON : ", df["CON"].value_counts())
-    print("OPN : ", df["OPN"].value_counts())
-    print("\n\n")
+    if show_count:
+        print("EXT : ", df["EXT"].value_counts())
+        print("NEU : ", df["NEU"].value_counts())
+        print("AGR : ", df["AGR"].value_counts())
+        print("CON : ", df["CON"].value_counts())
+        print("OPN : ", df["OPN"].value_counts())
+        print("\n\n")
 
     return df
 
