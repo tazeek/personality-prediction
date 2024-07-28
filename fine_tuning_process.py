@@ -1,4 +1,5 @@
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
+from sklearn.model_selection import train_test_split
 
 import utils.dataset_processors as dataset_processors
 
@@ -18,7 +19,8 @@ def load_default_hyperparams():
         choices=["bert", "roberta", "xlnet", "electra", "albert"])
     
     # Hyperparameters for fine-tuning
-    parser.add_argument("--split", "--sp", type=float, default=0.7)
+    parser.add_argument("--train_split", "--tp", type=float, default=0.6)
+    parser.add_argument("--test_split", "--tp", type=float, default=0.2)
     parser.add_argument("--dataset", "-ds", type=str, default="essays")
     parser.add_argument("--epoch", "-ep", type=int, default=10)
     parser.add_argument("--batch_size", "-bs", type=int, default=16)
@@ -61,7 +63,10 @@ def load_dataset(dataset_name):
 
 def splitting(dataset, ratio_split):
 
-    ...
+    train_data, test_data = train_test_split(dataset, train_size=ratio_split, random_state=42)
+    validation_data, test_data = train_test_split(test_data, train_size=0.2, random_state=42)
+    
+    return train_data, test_data, validation_data
 
 def transform(tokenizer, dataset):
 
