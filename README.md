@@ -121,4 +121,56 @@ The source code for this project is licensed under the [MIT license](LICENSE.md)
 
 ## [NEW] Fine-tuning
 
-## [NEW] Train using models
+Phases:
+
+1. Load the model to fine-tune
+2. Load the dataset to fine-tune
+3. Transform and split the dataset
+4. Begin fine-tuning the model
+5. Save the model
+
+## [NEW] Training phase
+
+Two phases: Transformation and training
+
+Transformation:
+
+1. Load the dataset
+2. (Optional) Perform pre-processing
+3. Transform the data using the fine-tuned model
+4. Save the data
+
+Training:
+
+1. Load the transformed data
+2. Create the model architecture
+3. Start training the model
+4. Evaluation metrics
+5. Save the model
+
+## [NEW] Saliency of models
+
+Phases:
+
+1. Load the model
+2. Create forward hook function
+3. Create backward hook function
+4. Attach both to the model
+5. Fetch the input
+6. Perform saliency
+7. Decide on the saliency method to perform
+
+## [NEW] Personality and Emotions
+
+Phases:
+
+1. Initialize the model
+2. Load the model weights
+3. Load the dataset
+4. Check the personality for every emotion
+5. Convert to label and add it to the dictionary
+6. Store it back into the JSON file
+
+## [NEW] Correlation Analysis
+
+## [NEW] Causation Analysis
