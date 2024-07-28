@@ -173,4 +173,20 @@ Phases:
 
 ## [NEW] Correlation Analysis
 
+Phases:
+
+1. Load the dataset
+2. Go by utterance
+3. Check by emotion and the corresponding personalities
+4. Create the confusion matrix
+5. Normalize the confusion matrix.
+
 ## [NEW] Causation Analysis
+
+Phases:
+
+1. Create the rules for "causation"
+2. Go by current and next utterance (unless end)
+3. Check by personality
+4. Create the diagram (Figure it out)
+5. Normalize the diagram (depends on 4)
