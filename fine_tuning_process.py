@@ -101,6 +101,10 @@ def label_dictionaries(columns):
 
 def transform(tokenizer, dataset):
 
+    # Clean up
+
+    # Encode with tokenizer
+
     ...
 
 def preparaing_data(use_sentence_segmentation, dataset):
@@ -119,6 +123,26 @@ def preparaing_data(use_sentence_segmentation, dataset):
     ...
 
 def start_fine_tuning(model, epochs, train_set, test_set):
+
+    # Begin epoch
+
+    # Start iterating the batch
+
+    # Feed into the model
+
+    # Get the output
+
+    # Find the loss
+
+    # Update the model weights and gradients
+
+    # Evaluate on the validation dataset
+
+    # Evaluate on the test dataset
+
+    # Display the update per epoch (Validation + Test)
+
+    # Save the model
     ...
 
 
