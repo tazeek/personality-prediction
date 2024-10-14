@@ -6,4 +6,7 @@ explogs/
 data/pandora
 *.sbatch
 
+*.pkl
+*.pickle
+
 dataset_erc/
