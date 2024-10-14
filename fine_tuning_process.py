@@ -120,6 +120,8 @@ def start_fine_tuning(model, epochs, train_set, test_set):
 
     # Start iterating the batch
 
+    ## Transform the dataset (Tokenizer)
+
     # Feed into the model
 
     # Get the output
@@ -136,5 +138,15 @@ def start_fine_tuning(model, epochs, train_set, test_set):
 
     # Save the model
     ...
+
+## Load the dataset
+
+## Transform the dataset (DataLoader)
+
+## Create the hyperparameters
+
+## Load the LLMs
+
+## Train the model
 
 
