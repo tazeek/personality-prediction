@@ -1,5 +1,6 @@
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
 from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
 
 import utils.dataset_processors as dataset_processors
 
@@ -98,15 +99,6 @@ def label_dictionaries(columns):
 
     return id2label, label2id
 
-
-def transform(tokenizer, dataset):
-
-    # Clean up
-
-    # Encode with tokenizer
-
-    ...
-
 def preparaing_data(use_sentence_segmentation, dataset):
 
     # Sentence or not?
@@ -119,7 +111,7 @@ def preparaing_data(use_sentence_segmentation, dataset):
 
         dataset = pd.DataFrame(split_data)
 
-    # Transformation
+    # Transformation and load into DataLoader
     ...
 
 def start_fine_tuning(model, epochs, train_set, test_set):

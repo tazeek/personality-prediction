@@ -34,6 +34,20 @@ class CNN(nn.Module):
         logits = self.fc2(x3)
 
         return torch.sigmoid(logits)
+    
+# For plain model
+class LLMClassifer(nn.Module):
+
+    def __init__(self, dropout = 0.5):
+        super(LLMClassifer, self).__init__()
+
+        self.dropout = nn.Dropout(dropout)
+        self.fc = nn.Linear(768, 5)
+
+    def forward(self, x):
+
+        logits = self.fc(x)
+        return torch.sigmoid(logits)
 
 # Create LSTM model
 class LSTMNetwork(nn.Module):
@@ -41,8 +55,8 @@ class LSTMNetwork(nn.Module):
         super(LSTMNetwork, self).__init__()
 
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, bidirectional=True, batch_first=True)
+        self.fc = nn.Linear(hidden_size * 2, output_size)
 
     def features_extraction(self, x):
 

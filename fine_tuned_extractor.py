@@ -7,9 +7,12 @@ import pickle
 import utils.dataset_processors as dataset_processors
 
 # Load BERT tokenizer and model (fine-tuned)
-config = AutoConfig.from_pretrained('fine-tuned-bert-personality', output_hidden_states =True)
-model = AutoModelForSequenceClassification.from_pretrained('fine-tuned-bert-personality', config=config)
-tokenizer = AutoTokenizer.from_pretrained('fine-tuned-bert-personality')
+model_name = "xlnet-base-cased"
+file_name = "xlnet-normal"
+
+config = AutoConfig.from_pretrained(model_name, output_hidden_states =True)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, config=config)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -56,5 +59,5 @@ for index, row in dataset.iterrows():
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
 
-with open('fine_tuned_normal.pkl', 'wb') as f:
+with open(f'{file_name}.pkl', 'wb') as f:
     pickle.dump(zip(cls_features, merged_labels), f)

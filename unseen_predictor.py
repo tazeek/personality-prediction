@@ -24,9 +24,9 @@ import utils.dataset_processors as dataset_processors
 
 if torch.cuda.is_available():
     DEVICE = torch.device("cuda")
-    print("GPU found (", torch.cuda.get_device_name(torch.cuda.current_device()), ")")
+    #print("GPU found (", torch.cuda.get_device_name(torch.cuda.current_device()), ")")
     torch.cuda.set_device(torch.cuda.current_device())
-    print("num device avail: ", torch.cuda.device_count())
+    #print("num device avail: ", torch.cuda.device_count())
 else:
     DEVICE = torch.device("cpu")
     print("Running on cpu")
@@ -86,13 +86,13 @@ def load_finetune_model(op_dir, finetune_model, dataset):
     for trait in trait_labels:
         if re.search(r"MLP_LM", str(finetune_model).upper()):
             model_name = f"{path_model}/MLP_LM_{trait}.h5"
-            print(f"Load model: {model_name}")
+            #print(f"Load model: {model_name}")
             abort_if_model_not_exist(model_name)
             model = tf.keras.models.load_model(model_name)
 
         elif re.search(r"SVM_LM", str(finetune_model).upper()):
             model_name = f"{path_model}/SVM_LM_{trait}.pkl"
-            print(f"Load model: {model_name}")
+            #print(f"Load model: {model_name}")
             abort_if_model_not_exist(model_name)
             model = joblib.load(model_name)
 

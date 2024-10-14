@@ -29,7 +29,8 @@ def load_data(file_name):
     processed_data, labels = [], []
 
     # Get the file name
-    file_name = file_name_mapper(file_name)
+    file_name = 'bert-tuned_segmented'
+    #file_name = file_name_mapper(file_name)
     print(f"Loading file: {file_name}.pkl\n")
 
     with open(f'{file_name}.pkl', 'rb') as file:
@@ -40,6 +41,7 @@ def load_data(file_name):
 
 def load_model(model_name):
     return {
+        'plain': LLMClassifer(),
         'cnn': CNN(5),
         'lstm': LSTMNetwork(768,128,5),
         'gru': GRUNetwork(768,128,5)
@@ -97,8 +99,8 @@ torch.random.manual_seed(seed)
 file_name = 'segmented'
 data, labels = load_data(file_name)
 
-# Split using K-Fold cross validation (4)
-folds = 4
+# Split using K-Fold cross validation (10)
+folds = 10
 skf = KFold(n_splits=folds, shuffle=True, random_state=seed)
 print("Loaded the data! \n")
 
@@ -240,5 +242,5 @@ print(best_model)
 # Save the model
 best_model_name = f"finetuned_saved_models/{model_name}_{file_name}.pth"
 print(f"Model name is: {best_model_name}")
-#torch.save(best_model.state_dict(), best_model_name)
+torch.save(best_model.state_dict(), best_model_name)
 

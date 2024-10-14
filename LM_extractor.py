@@ -140,11 +140,14 @@ if __name__ == "__main__":
 
     model, tokenizer, n_hl, hidden_dim = get_model(embed)
 
+    token_length = int(token_length)
+    batch_size = int(batch_size)
+
     # create a class which can be passed to the pyTorch dataloader. responsible for returning tokenized and encoded values of the dataset
     # this class will have __getitem__(self,idx) function which will return input_ids and target values
 
     map_dataset = MyMapDataset(dataset, tokenizer, token_length, DEVICE, mode)
-    data_loader = DataLoader(dataset=map_dataset, batch_size=batch_size, shuffle=False)
+    data_loader = DataLoader(dataset=map_dataset, batch_size=32, shuffle=False)
 
     if DEVICE == torch.device("cuda"):
         model = model.cuda()
