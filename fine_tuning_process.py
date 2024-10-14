@@ -85,7 +85,7 @@ def load_dataset(dataset_name):
 def splitting(dataset, ratio_split):
 
     train_data, test_data = train_test_split(dataset, train_size=ratio_split, random_state=42)
-    validation_data, test_data = train_test_split(test_data, train_size=0.2, random_state=42)
+    validation_data, test_data = train_test_split(test_data, train_size=0.5, random_state=42)
     
     return train_data, test_data, validation_data
 
@@ -142,7 +142,10 @@ def start_fine_tuning(model, epochs, train_set, test_set):
 ## Load the dataset
 dataset_name = "essays"
 dataset_full = load_dataset(dataset_name)
-print(dataset_full)
+
+## Split the dataset: 60% for Training, 20% for Testing, 20% for validation
+ratio_split = 0.6
+train, test, validation = splitting(dataset_full, ratio_split)
 
 ## Transform the dataset (DataLoader)
 
