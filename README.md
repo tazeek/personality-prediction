@@ -4,7 +4,17 @@
 ## License
 The source code for this project is licensed under the [MIT license](LICENSE.md).
 
-## [NEW] Fine-tuning
+## Major Phases involved
+
+1. Fine-tuning LLMs
+2. Dataset Transformation
+3. Training model with LLMs
+4. Evaluation metrics
+5. Visualization of Results
+
+## Sliding Window Concept
+
+### Fine-tuning
 
 Phases:
 
@@ -14,7 +24,7 @@ Phases:
 4. Begin fine-tuning the model
 5. Save the model
 
-## [NEW] Training phase
+### Training phase
 
 Two phases: Transformation and training
 
@@ -33,7 +43,7 @@ Training:
 4. Evaluation metrics
 5. Save the model
 
-## [NEW] Saliency of models
+### Saliency of models
 
 Phases:
 
@@ -45,7 +55,9 @@ Phases:
 6. Perform saliency
 7. Decide on the saliency method to perform
 
-## [NEW] Personality and Emotions
+---
+
+### Personality and Emotions
 
 Phases:
 
@@ -56,7 +68,7 @@ Phases:
 5. Convert to label and add it to the dictionary
 6. Store it back into the JSON file
 
-## [NEW] Correlation Analysis
+### Correlation Analysis
 
 Phases:
 
@@ -66,7 +78,7 @@ Phases:
 4. Create the confusion matrix
 5. Normalize the confusion matrix.
 
-## [NEW] Causation Analysis
+### Causation Analysis
 
 Phases:
 
