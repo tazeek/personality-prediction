@@ -140,6 +140,9 @@ def start_fine_tuning(model, epochs, train_set, test_set):
     ...
 
 ## Load the dataset
+dataset_name = "essays"
+dataset_full = load_dataset(dataset_name)
+print(dataset_full)
 
 ## Transform the dataset (DataLoader)
 
