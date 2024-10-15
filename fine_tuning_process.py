@@ -13,23 +13,6 @@ def _dataset_directory(name):
         'essays': "data/essays/essays.csv"
     }[name]
 
-# Convert from essay to sentences
-def _split_text_with_labels(row):
-    
-    # Split sentences
-    sentences = re.split(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s", row['text'])
-
-    return [{
-        'text': sentence,
-        'EXT': row['EXT'],
-        'NEU': row['NEU'],
-        'AGR': row['AGR'],
-        'CON': row['CON'],
-        'OPN': row['OPN']
-    }
-        for sentence in sentences       
-    ]
-
 def load_default_hyperparams():
 
     parser = argparse.ArgumentParser()
@@ -99,20 +82,28 @@ def label_dictionaries(columns):
 
     return id2label, label2id
 
-def preparaing_data(use_sentence_segmentation, dataset):
+def transform_dataloader(use_sentence_segmentation, dataset):
 
-    # Sentence or not?
-    if use_sentence_segmentation:
+    dataloader_set = None
 
-        split_data = [
-            _split_text_with_labels(row)
-            for index, row in dataset.iterrows()
-        ]
+    # Iterate one at a time
 
-        dataset = pd.DataFrame(split_data)
+    # Extract the labels
+
+    # Transform labels to integers
+
+    # If using sentence segmentation:
+    # Split into the respective sentences and keep the labels consistent
+
+    # Add to the dictionary list
+
+    # Turn the dictionary list into a dataframe
 
     # Transformation and load into DataLoader
-    ...
+    
+    quit()
+
+    return dataloader_set
 
 def start_fine_tuning(model, epochs, train_set, test_set):
 
@@ -148,6 +139,10 @@ ratio_split = 0.6
 train, test, validation = splitting(dataset_full, ratio_split)
 
 ## Transform the dataset (DataLoader)
+use_sentence_segmentation = True
+train_loader = transform_dataloader(use_sentence_segmentation, train)
+print(train_loader)
+print(len(train_loader))
 
 ## Create the hyperparameters
 
