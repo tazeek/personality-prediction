@@ -5,6 +5,19 @@ import torch
 from utils.author_100recent import get_100_recent_posts
 import utils.dataset_processors as dataset_processors
 
+class DatasetLoader(Dataset):
+    
+    def __init__(self, input, labels):
+
+        self._input = input
+        self._labels = labels
+
+    def __len__(self):
+        return len(self._labels) 
+    
+    def __getitem__(self, idx):
+        return (self._features[idx], self._labels[idx])
+
 
 class MyMapDataset(Dataset):
     def __init__(self, dataset, tokenizer, token_length, DEVICE, mode):

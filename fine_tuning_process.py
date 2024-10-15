@@ -1,6 +1,7 @@
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
 from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset, DataLoader
+
+from utils.data_utils import DatasetLoader
 
 import utils.dataset_processors as dataset_processors
 
@@ -40,15 +41,8 @@ def _prepare_dataloader(dataset):
         # Process the labels
         label_entries.append([row[label] for label in labels_list])
 
-    print(text_entries)
-    print(label_entries)
-    quit()
-
-    # Feed into dataloader
-
-    # Return
-
-    return ...
+    # Feed into dataloader and return
+    return DatasetLoader(text_entries, label_entries)
 
 def _dataset_directory(name):
     return {
@@ -177,8 +171,6 @@ train, test, validation = splitting(dataset_full, ratio_split)
 ## Transform the dataset (DataLoader)
 use_sentence_segmentation = False
 train_loader = transform_dataloader(use_sentence_segmentation, train)
-print(train_loader)
-print(len(train_loader))
 
 ## Create the hyperparameters
 
