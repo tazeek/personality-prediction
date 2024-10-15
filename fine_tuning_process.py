@@ -25,6 +25,31 @@ def _sentence_segmentation_process(row):
         if len(sentence) != 0       
     ]
 
+def _prepare_dataloader(dataset):
+
+    labels_list = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+
+    text_entries = []
+    label_entries = []
+
+    for _, row in dataset.iterrows():
+
+        # Process the text
+        text_entries.append(dataset_processors.preprocess_text(row['text']))
+
+        # Process the labels
+        label_entries.append([row[label] for label in labels_list])
+
+    print(text_entries)
+    print(label_entries)
+    quit()
+
+    # Feed into dataloader
+
+    # Return
+
+    return ...
+
 def _dataset_directory(name):
     return {
         'essays': "data/essays/essays.csv"
@@ -109,17 +134,12 @@ def transform_dataloader(use_sentence_segmentation, dataset):
 
             # Add to the dictionary list
             new_dataentries_list.extend(_sentence_segmentation_process(row))
-            print(new_dataentries_list)
-            quit()
 
         # Turn the dictionary list into a dataframe
         dataset = pd.DataFrame(new_dataentries_list)
 
     # Transformation and return the DataLoader
-
-    quit()
-
-    return None
+    return _prepare_dataloader(dataset)
 
 def start_fine_tuning(model, epochs, train_set, test_set):
 
@@ -155,7 +175,7 @@ ratio_split = 0.6
 train, test, validation = splitting(dataset_full, ratio_split)
 
 ## Transform the dataset (DataLoader)
-use_sentence_segmentation = True
+use_sentence_segmentation = False
 train_loader = transform_dataloader(use_sentence_segmentation, train)
 print(train_loader)
 print(len(train_loader))
