@@ -8,6 +8,22 @@ import pandas as pd
 import re
 import argparse
 
+def _sentence_segmentation_process(row):
+
+    # Split sentences
+    sentences = re.split(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s", row['text'])
+
+    return [{
+        'text': sentence,
+        'EXT': row['EXT'],
+        'NEU': row['NEU'],
+        'AGR': row['AGR'],
+        'CON': row['CON'],
+        'OPN': row['OPN']
+    }
+        for sentence in sentences       
+    ]
+
 def _dataset_directory(name):
     return {
         'essays': "data/essays/essays.csv"
@@ -84,28 +100,18 @@ def label_dictionaries(columns):
 
 def transform_dataloader(use_sentence_segmentation, dataset):
 
-    dataloader_set = None
+    new_dataentries_list = []
 
     # Iterate one at a time
-    for _, row in dataset.iterrows():
+    if use_sentence_segmentation:
+        for _, row in dataset.iterrows():
 
-        # Extract the labels
-        data_entry = {
-            'EXT': row['EXT'],
-            'NEU': row['NEU'],
-            'AGR': row['AGR'],
-            'CON': row['CON'],
-            'OPN': row['OPN']
-        }
+            # Add to the dictionary list
+            new_dataentries_list.extend(_sentence_segmentation_process(row))
+            print(new_dataentries_list)
+            quit()
 
-        print(data_entry)
-        print(row)
-        quit()
-
-    # If using sentence segmentation:
-    # Split into the respective sentences and keep the labels consistent
-
-    # Add to the dictionary list
+        print(new_dataentries_list)
 
     # Turn the dictionary list into a dataframe
 
@@ -113,7 +119,7 @@ def transform_dataloader(use_sentence_segmentation, dataset):
 
     quit()
 
-    return dataloader_set
+    return None
 
 def start_fine_tuning(model, epochs, train_set, test_set):
 
