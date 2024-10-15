@@ -87,10 +87,20 @@ def transform_dataloader(use_sentence_segmentation, dataset):
     dataloader_set = None
 
     # Iterate one at a time
+    for _, row in dataset.iterrows():
 
-    # Extract the labels
+        # Extract the labels
+        data_entry = {
+            'EXT': row['EXT'],
+            'NEU': row['NEU'],
+            'AGR': row['AGR'],
+            'CON': row['CON'],
+            'OPN': row['OPN']
+        }
 
-    # Transform labels to integers
+        print(data_entry)
+        print(row)
+        quit()
 
     # If using sentence segmentation:
     # Split into the respective sentences and keep the labels consistent
@@ -100,7 +110,7 @@ def transform_dataloader(use_sentence_segmentation, dataset):
     # Turn the dictionary list into a dataframe
 
     # Transformation and load into DataLoader
-    
+
     quit()
 
     return dataloader_set
