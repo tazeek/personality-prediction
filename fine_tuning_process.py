@@ -59,11 +59,13 @@ def load_default_hyperparams():
     
     # Hyperparameters for fine-tuning
     parser.add_argument("--train_split", "--tp", type=float, default=0.6)
-    parser.add_argument("--test_split", "--tp", type=float, default=0.2)
+    parser.add_argument("--test_split", "--tp", type=float, default=0.5)
     parser.add_argument("--dataset", "-ds", type=str, default="essays")
     parser.add_argument("--epoch", "-ep", type=int, default=10)
-    parser.add_argument("--sentence_segmentation", "-ss", type=bool, default=False)
+    parser.add_argument("--sentence_segmentation", "-ss", type=bool, default=True)
     parser.add_argument("--batch_size", "-bs", type=int, default=16)
+    parser.add_argument("--learning_rate", "-lr", type=float, default=2e-5)
+    parser.add_argument("--weight_decay", "--wc", type=float, default=0.01)
     
     return parser.parse_args()
 
