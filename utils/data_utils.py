@@ -16,7 +16,7 @@ class DatasetLoader(Dataset):
         return len(self._labels) 
     
     def __getitem__(self, idx):
-        return (self._features[idx], self._labels[idx])
+        return (self._input[idx], self._labels[idx])
 
 
 class MyMapDataset(Dataset):

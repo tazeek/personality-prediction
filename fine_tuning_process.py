@@ -1,4 +1,5 @@
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
+from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from utils.data_utils import DatasetLoader
@@ -137,13 +138,15 @@ def transform_dataloader(use_sentence_segmentation, dataset):
     # Transformation and return the DataLoader
     return _prepare_dataloader(dataset)
 
-def start_fine_tuning(model, epochs, train_set, test_set):
-
-    # Begin epoch
+def start_fine_tuning(model, tokenizer, train_set):
 
     # Start iterating the batch
+    for batch_set in train_set:
+        input_text, input_labels = batch_set
+        print(input_text, input_labels)
+        quit()
 
-    ## Transform the dataset (Tokenizer)
+    # Transform the dataset (Tokenizer)
 
     # Feed into the model
 
@@ -173,12 +176,16 @@ dataset_full = load_dataset(dataset_name)
 train, test, validation = splitting(dataset_full, args_settings.train_split)
 
 # Transform the dataset (DataLoader)
-use_sentence_segmentation = False
-train_loader = transform_dataloader(args_settings.sentence_segmentation, train)
+train_set = transform_dataloader(args_settings.sentence_segmentation, train)
+
+train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 
 # Load the LLMs
 model, tokenizer = load_llm_model(args_settings.llm_name)
 
 # Train the model
+for epoch in range(args_settings.epoch + 1):
 
+    start_fine_tuning(model, tokenizer, train_loader)
+    quit()
 
