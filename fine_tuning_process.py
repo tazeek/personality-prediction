@@ -58,8 +58,8 @@ def load_default_hyperparams():
         choices=["bert", "roberta", "xlnet", "electra", "albert"])
     
     # Hyperparameters for fine-tuning
-    parser.add_argument("--train_split", "--tp", type=float, default=0.6)
-    parser.add_argument("--test_split", "--tp", type=float, default=0.5)
+    parser.add_argument("--train_split", "--train_split", type=float, default=0.6)
+    parser.add_argument("--test_split", "--test_split", type=float, default=0.5)
     parser.add_argument("--dataset", "-ds", type=str, default="essays")
     parser.add_argument("--epoch", "-ep", type=int, default=10)
     parser.add_argument("--sentence_segmentation", "-ss", type=bool, default=True)
@@ -162,22 +162,22 @@ def start_fine_tuning(model, epochs, train_set, test_set):
     # Save the model
     ...
 
-## Load the dataset
+# Load hyperparameters settings
+args_settings = load_default_hyperparams()
+
+# Load the dataset
 dataset_name = "essays"
 dataset_full = load_dataset(dataset_name)
 
-## Split the dataset: 60% for Training, 20% for Testing, 20% for validation
-ratio_split = 0.6
-train, test, validation = splitting(dataset_full, ratio_split)
+# Split the dataset: 60% for Training, 20% for Testing, 20% for validation
+train, test, validation = splitting(dataset_full, args_settings.train_split)
 
-## Transform the dataset (DataLoader)
+# Transform the dataset (DataLoader)
 use_sentence_segmentation = False
-train_loader = transform_dataloader(use_sentence_segmentation, train)
+train_loader = transform_dataloader(args_settings.sentence_segmentation, train)
 
-## Create the hyperparameters
+# Load the LLMs
 
-## Load the LLMs
-
-## Train the model
+# Train the model
 
 
