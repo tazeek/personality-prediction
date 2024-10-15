@@ -21,7 +21,8 @@ def _sentence_segmentation_process(row):
         'CON': row['CON'],
         'OPN': row['OPN']
     }
-        for sentence in sentences       
+        for sentence in sentences
+        if len(sentence) != 0       
     ]
 
 def _dataset_directory(name):
@@ -111,11 +112,10 @@ def transform_dataloader(use_sentence_segmentation, dataset):
             print(new_dataentries_list)
             quit()
 
-        print(new_dataentries_list)
+        # Turn the dictionary list into a dataframe
+        dataset = pd.DataFrame(new_dataentries_list)
 
-    # Turn the dictionary list into a dataframe
-
-    # Transformation and load into DataLoader
+    # Transformation and return the DataLoader
 
     quit()
 
