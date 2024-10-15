@@ -143,26 +143,19 @@ def start_fine_tuning(model, tokenizer, train_set):
     # Start iterating the batch
     for batch_set in train_set:
         input_text, input_labels = batch_set
-        print(input_text, input_labels)
+        print(len(input_text))
+        print(len(input_labels))
         quit()
 
-    # Transform the dataset (Tokenizer)
+        # Transform the dataset (Tokenizer)
 
-    # Feed into the model
+        # Feed into the model
 
-    # Get the output
+        # Get the output
 
-    # Find the loss
+        # Find the loss
 
-    # Update the model weights and gradients
-
-    # Evaluate on the validation dataset
-
-    # Evaluate on the test dataset
-
-    # Display the update per epoch (Validation + Test)
-
-    # Save the model
+        # Update the model weights and gradients
     ...
 
 # Load hyperparameters settings
@@ -183,9 +176,17 @@ train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 # Load the LLMs
 model, tokenizer = load_llm_model(args_settings.llm_name)
 
-# Train the model
 for epoch in range(args_settings.epoch + 1):
 
+    # Train the model
     start_fine_tuning(model, tokenizer, train_loader)
+
+    # Evaluate on the validation dataset
+
+    # Evaluate on the test dataset
+
+    # Display the update per epoch (Validation + Test)
+
+    # Save the model
     quit()
 

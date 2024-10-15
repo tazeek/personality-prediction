@@ -10,7 +10,7 @@ class DatasetLoader(Dataset):
     def __init__(self, input, labels):
 
         self._input = input
-        self._labels = labels
+        self._labels = torch.from_numpy(np.array(labels))
 
     def __len__(self):
         return len(self._labels) 
