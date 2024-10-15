@@ -54,7 +54,7 @@ def load_default_hyperparams():
     parser = argparse.ArgumentParser()
 
     # Model related
-    parser.add_argument("--pretrained_model", "-pm", type=str, default="bert",
+    parser.add_argument("--llm_name", "-pm", type=str, default="bert",
         choices=["bert", "roberta", "xlnet", "electra", "albert"])
     
     # Hyperparameters for fine-tuning
@@ -177,6 +177,7 @@ use_sentence_segmentation = False
 train_loader = transform_dataloader(args_settings.sentence_segmentation, train)
 
 # Load the LLMs
+model, tokenizer = load_llm_model(args_settings.llm_name)
 
 # Train the model
 
