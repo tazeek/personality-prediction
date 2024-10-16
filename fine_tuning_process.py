@@ -154,6 +154,7 @@ def start_fine_tuning(model, tokenizer, train_set, device):
 
     # Start iterating the batch
     for batch_set in tqdm(train_set, ncols=50):
+
         input_text, labels = batch_set
 
         # Transform the dataset (Tokenizer)
@@ -164,11 +165,11 @@ def start_fine_tuning(model, tokenizer, train_set, device):
             return_tensors='pt',
         )
 
+        input_text = input_text.to(device)
+        labels = labels.to(device)
+
         # Feed into the model
         outputs = model(input_text['input_ids'])
-
-        print(outputs)
-        quit()
         
         # Find the loss
         loss = loss_function(outputs.logits, labels)
@@ -179,7 +180,8 @@ def start_fine_tuning(model, tokenizer, train_set, device):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    ...
+    
+    return None
 
 # Get CUDA device
 device = torch.device('cuda')
@@ -202,7 +204,7 @@ train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 
 # Load the LLMs and mount onto CUDA
 model, tokenizer = load_llm_model(args_settings.llm_name)
-model.to(device)
+model = model.to(device)
 
 for epoch in range(args_settings.epoch + 1):
 
