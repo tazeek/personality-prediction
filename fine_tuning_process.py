@@ -160,10 +160,15 @@ def start_fine_tuning(model, tokenizer, train_set):
         # Feed into the model
 
         # Get the output
-
         # Find the loss
+        loss = ...
 
         # Update the model weights and gradients
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
     ...
 
 # Load hyperparameters settings
