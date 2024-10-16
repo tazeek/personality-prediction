@@ -1,6 +1,9 @@
 from transformers import BertForSequenceClassification, BertTokenizer, RobertaForSequenceClassification, RobertaTokenizer, XLNetForSequenceClassification, XLNetTokenizer, ElectraForSequenceClassification, ElectraTokenizer, AlbertForSequenceClassification, AlbertTokenizer
 from torch.utils.data import DataLoader
+from torch.optim import Adam
+from torch.nn import BCEWithLogitsLoss
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 from utils.data_utils import DatasetLoader
 
@@ -91,6 +94,7 @@ def load_llm_model(model_name):
 
     model = model_class.from_pretrained(
         model_version,
+        labels = 5,
         output_hidden_states = True
     )
 
@@ -140,8 +144,14 @@ def transform_dataloader(use_sentence_segmentation, dataset):
 
 def start_fine_tuning(model, tokenizer, train_set):
 
+    # Initiate optimizer
+    model.train()
+
+    optimizer = Adam(model.parameters(), weight_decay=1e-8)
+    loss_function = BCEWithLogitsLoss()
+
     # Start iterating the batch
-    for batch_set in train_set:
+    for batch_set in tqdm(train_set, n_cols=50):
         input_text, input_labels = batch_set
 
         # Transform the dataset (Tokenizer)
