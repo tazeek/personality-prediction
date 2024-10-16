@@ -7,16 +7,17 @@ import utils.dataset_processors as dataset_processors
 
 class DatasetLoader(Dataset):
     
-    def __init__(self, input, labels):
+    def __init__(self, input, attention, labels):
 
         self._input = input
-        self._labels = torch.from_numpy(np.array(labels))
+        self._attention = attention
+        self._labels = torch.tensor(labels, dtype=torch.float32)
 
     def __len__(self):
         return len(self._labels) 
     
     def __getitem__(self, idx):
-        return (self._input[idx], self._labels[idx])
+        return (self._input[idx], self._attention[idx], self._labels[idx])
 
 
 class MyMapDataset(Dataset):

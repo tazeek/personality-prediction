@@ -35,22 +35,29 @@ def _prepare_dataloader(dataset, tokenizer):
 
     labels_list = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
-    text_entries = []
+    token_entries = []
+    attention_entries = []
     label_entries = []
 
     for _, row in dataset.iterrows():
 
         # Tokenize and process
-        tokenized_text = tokenizer(dataset_processors.preprocess_text(row['text']), padding=True, truncation=True, return_tensors='pt')
+        tokenized_text = tokenizer(
+            dataset_processors.preprocess_text(row['text']), 
+            padding='max_length', 
+            truncation=True, 
+            return_tensors='pt'
+        )
 
-        # Process the text
-        text_entries.append(tokenized_text['input_ids'])
+        # Append the parts
+        token_entries.append(tokenized_text['input_ids'])
+        attention_entries.append(tokenized_text['attention_mask'])
 
         # Process the labels
         label_entries.append([row[label] for label in labels_list])
 
     # Feed into dataloader and return
-    return DatasetLoader(text_entries, label_entries)
+    return DatasetLoader(token_entries, attention_entries, label_entries)
 
 def _dataset_directory(name):
     return {
@@ -154,51 +161,45 @@ def start_fine_tuning(model, tokenizer, train_set, device):
 
     optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
     loss_function = BCEWithLogitsLoss()
+    accumulation_steps = 4
     total_loss = 0
 
     # Start iterating the batch
-    for batch_set in tqdm(train_set, ncols=50):
+    for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
 
-        input_text, labels = batch_set
-        print(input_text)
-        quit()
+        input_tokens, attention, labels = batch_set
 
-        # Convert labels to tensor
-        labels = torch.tensor(labels, dtype=torch.float32)
+        # Flatten the dimension
+        input_tokens = input_tokens.squeeze(1)
+        attention = attention.squeeze(1)
 
-        # Transform the dataset (Tokenizer)
-        input_text = tokenizer(
-            input_text, 
-            truncation=True,
-            padding='max_length',
-            return_tensors='pt',
-        )
-
-        input_text = input_text.to(device)
-        labels = labels.to(device)
+        input_tokens = input_tokens.to(device, non_blocking=True)
+        attention = attention.to(device, non_blocking=True)
+        labels = labels.to(device, non_blocking=True)
 
         # Feed into the model
         outputs = model(
-            input_ids = input_text['input_ids'],
-            attention_mask = input_text['attention_mask']
+            input_ids = input_tokens,
+            attention_mask = attention
         )
         
         # Find the loss
         loss = loss_function(outputs.logits, labels)
+        loss.backward()
+
         total_loss += loss.cpu().item()
 
         # Update the model weights and gradients
         optimizer.zero_grad()
-        loss.backward()
         optimizer.step()
     
-    return None
+    return total_loss
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
 
 # Get CUDA device
-device = torch.device('cuda')
+device = torch.device('cuda:0')
 print(f"Device is: {device}")
 
 # Load the LLMs and mount onto CUDA
@@ -214,8 +215,12 @@ train, test, validation = splitting(dataset_full, args_settings.train_split)
 
 # Transform the dataset (DataLoader)
 train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
+test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
+val_set = transform_dataloader(args_settings.sentence_segmentation, validation, tokenizer)
 
-train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
+train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False, pin_memory=True)
+test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False, pin_memory=True)
+val_loader = DataLoader(val_set, args_settings.batch_size, shuffle=False, pin_memory=True)
 
 for epoch in range(args_settings.epoch + 1):
 
