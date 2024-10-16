@@ -152,20 +152,23 @@ def start_fine_tuning(model, tokenizer, train_set):
 
     # Start iterating the batch
     for batch_set in tqdm(train_set, n_cols=50):
-        input_text, input_labels = batch_set
+        input_text, labels = batch_set
 
         # Transform the dataset (Tokenizer)
         input_text = tokenizer(input_text, truncation = True)
 
         # Feed into the model
+        outputs = model(input_ids=input_text)
 
-        # Get the output
+        print(outputs)
+        quit()
+        
         # Find the loss
-        loss = ...
+        loss = loss_function(outputs.logits, labels)
+        print(loss)
+        quit()
 
         # Update the model weights and gradients
-
-        # Backward pass and optimization
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
