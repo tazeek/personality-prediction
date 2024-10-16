@@ -149,7 +149,7 @@ def start_fine_tuning(model, tokenizer, train_set, device):
     # Initiate optimizer
     model.train()
 
-    optimizer = Adam(model.parameters(), weight_decay=1e-8)
+    optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
     loss_function = BCEWithLogitsLoss()
     total_loss = 0
 
@@ -173,7 +173,10 @@ def start_fine_tuning(model, tokenizer, train_set, device):
         labels = labels.to(device)
 
         # Feed into the model
-        outputs = model(input_text['input_ids'])
+        outputs = model(
+            input_ids = input_text['input_ids'],
+            attention_mask = input_text['attention_mask']
+        )
         
         # Find the loss
         loss = loss_function(outputs.logits, labels)
@@ -186,12 +189,16 @@ def start_fine_tuning(model, tokenizer, train_set, device):
     
     return None
 
+# Load hyperparameters settings
+args_settings = load_default_hyperparams()
+
 # Get CUDA device
 device = torch.device('cuda')
 print(f"Device is: {device}")
 
-# Load hyperparameters settings
-args_settings = load_default_hyperparams()
+# Load the LLMs and mount onto CUDA
+model, tokenizer = load_llm_model(args_settings.llm_name)
+model = model.to(device)
 
 # Load the dataset
 dataset_name = "essays"
@@ -205,14 +212,11 @@ train_set = transform_dataloader(args_settings.sentence_segmentation, train)
 
 train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 
-# Load the LLMs and mount onto CUDA
-model, tokenizer = load_llm_model(args_settings.llm_name)
-model = model.to(device)
-
 for epoch in range(args_settings.epoch + 1):
 
     # Train the model
-    start_fine_tuning(model, tokenizer, train_loader, device)
+    loss_amount = start_fine_tuning(model, tokenizer, train_loader, device)
+    print(loss_amount)
 
     # Evaluate on the validation dataset
 
