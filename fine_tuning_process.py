@@ -151,11 +151,15 @@ def start_fine_tuning(model, tokenizer, train_set, device):
 
     optimizer = Adam(model.parameters(), weight_decay=1e-8)
     loss_function = BCEWithLogitsLoss()
+    total_loss = 0
 
     # Start iterating the batch
     for batch_set in tqdm(train_set, ncols=50):
 
         input_text, labels = batch_set
+
+        # Convert labels to tensor
+        labels = torch.tensor(labels, dtype=torch.float32)
 
         # Transform the dataset (Tokenizer)
         input_text = tokenizer(
@@ -173,8 +177,7 @@ def start_fine_tuning(model, tokenizer, train_set, device):
         
         # Find the loss
         loss = loss_function(outputs.logits, labels)
-        print(loss)
-        quit()
+        total_loss += loss.cpu().item()
 
         # Update the model weights and gradients
         optimizer.zero_grad()
