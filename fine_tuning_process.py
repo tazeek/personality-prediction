@@ -1,4 +1,4 @@
-from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, XLNetModel, XLNetTokenizer, ElectraModel, ElectraTokenizer, AlbertModel, AlbertTokenizer
+from transformers import BertForSequenceClassification, BertTokenizer, RobertaForSequenceClassification, RobertaTokenizer, XLNetForSequenceClassification, XLNetTokenizer, ElectraForSequenceClassification, ElectraTokenizer, AlbertForSequenceClassification, AlbertTokenizer
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
@@ -75,11 +75,11 @@ def load_llm_model(model_name):
 
     # Models used: BERT, RoBERTa, XLNet, ELECTRA, Albert
     model_list = {
-        'bert': (BertModel, BertTokenizer, "bert-base-uncased"),
-        'roberta': (RobertaModel, RobertaTokenizer, "roberta-base"),
-        'xlnet': (XLNetModel, XLNetTokenizer, 'xlnet-base-cased'),
-        'electra': (ElectraModel, ElectraTokenizer, 'google/electra-base-discriminator'),
-        'albert': (AlbertModel, AlbertTokenizer, "albert-base-v2")
+        'bert': (BertForSequenceClassification, BertTokenizer, "bert-base-uncased"),
+        'roberta': (RobertaForSequenceClassification, RobertaTokenizer, "roberta-base"),
+        'xlnet': (XLNetForSequenceClassification, XLNetTokenizer, 'xlnet-base-cased'),
+        'electra': (ElectraForSequenceClassification, ElectraTokenizer, 'google/electra-base-discriminator'),
+        'albert': (AlbertForSequenceClassification, AlbertTokenizer, "albert-base-v2")
     } 
 
     model_class, tokenizer_class, model_version = model_list[model_name]
@@ -143,11 +143,9 @@ def start_fine_tuning(model, tokenizer, train_set):
     # Start iterating the batch
     for batch_set in train_set:
         input_text, input_labels = batch_set
-        print(len(input_text))
-        print(len(input_labels))
-        quit()
 
         # Transform the dataset (Tokenizer)
+        input_text = tokenizer(input_text, truncation = True)
 
         # Feed into the model
 
@@ -187,6 +185,7 @@ for epoch in range(args_settings.epoch + 1):
 
     # Display the update per epoch (Validation + Test)
 
-    # Save the model
     quit()
+
+# Save the model
 
