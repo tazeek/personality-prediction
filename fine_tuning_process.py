@@ -31,7 +31,7 @@ def _sentence_segmentation_process(row):
         if len(sentence) != 0       
     ]
 
-def _prepare_dataloader(dataset):
+def _prepare_dataloader(dataset, tokenizer):
 
     labels_list = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -40,8 +40,11 @@ def _prepare_dataloader(dataset):
 
     for _, row in dataset.iterrows():
 
+        # Tokenize and process
+        tokenized_text = tokenizer(dataset_processors.preprocess_text(row['text']), padding=True, truncation=True, return_tensors='pt')
+
         # Process the text
-        text_entries.append(dataset_processors.preprocess_text(row['text']))
+        text_entries.append(tokenized_text['input_ids'])
 
         # Process the labels
         label_entries.append([row[label] for label in labels_list])
@@ -127,7 +130,7 @@ def label_dictionaries(columns):
 
     return id2label, label2id
 
-def transform_dataloader(use_sentence_segmentation, dataset):
+def transform_dataloader(use_sentence_segmentation, dataset, tokenizer):
 
     new_dataentries_list = []
 
@@ -142,7 +145,7 @@ def transform_dataloader(use_sentence_segmentation, dataset):
         dataset = pd.DataFrame(new_dataentries_list)
 
     # Transformation and return the DataLoader
-    return _prepare_dataloader(dataset)
+    return _prepare_dataloader(dataset, tokenizer)
 
 def start_fine_tuning(model, tokenizer, train_set, device):
 
@@ -157,6 +160,8 @@ def start_fine_tuning(model, tokenizer, train_set, device):
     for batch_set in tqdm(train_set, ncols=50):
 
         input_text, labels = batch_set
+        print(input_text)
+        quit()
 
         # Convert labels to tensor
         labels = torch.tensor(labels, dtype=torch.float32)
@@ -208,7 +213,7 @@ dataset_full = load_dataset(dataset_name)
 train, test, validation = splitting(dataset_full, args_settings.train_split)
 
 # Transform the dataset (DataLoader)
-train_set = transform_dataloader(args_settings.sentence_segmentation, train)
+train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
 
 train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 
