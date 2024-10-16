@@ -11,6 +11,7 @@ import utils.dataset_processors as dataset_processors
 
 import pandas as pd
 import re
+import torch
 import argparse
 
 def _sentence_segmentation_process(row):
@@ -94,7 +95,8 @@ def load_llm_model(model_name):
 
     model = model_class.from_pretrained(
         model_version,
-        labels = 5,
+        num_labels = 5,
+        problem_type = "multi_label_classification",
         output_hidden_states = True
     )
 
@@ -142,7 +144,7 @@ def transform_dataloader(use_sentence_segmentation, dataset):
     # Transformation and return the DataLoader
     return _prepare_dataloader(dataset)
 
-def start_fine_tuning(model, tokenizer, train_set):
+def start_fine_tuning(model, tokenizer, train_set, device):
 
     # Initiate optimizer
     model.train()
@@ -151,14 +153,19 @@ def start_fine_tuning(model, tokenizer, train_set):
     loss_function = BCEWithLogitsLoss()
 
     # Start iterating the batch
-    for batch_set in tqdm(train_set, n_cols=50):
+    for batch_set in tqdm(train_set, ncols=50):
         input_text, labels = batch_set
 
         # Transform the dataset (Tokenizer)
-        input_text = tokenizer(input_text, truncation = True)
+        input_text = tokenizer(
+            input_text, 
+            truncation=True,
+            padding='max_length',
+            return_tensors='pt',
+        )
 
         # Feed into the model
-        outputs = model(input_ids=input_text)
+        outputs = model(input_text['input_ids'])
 
         print(outputs)
         quit()
@@ -173,6 +180,10 @@ def start_fine_tuning(model, tokenizer, train_set):
         loss.backward()
         optimizer.step()
     ...
+
+# Get CUDA device
+device = torch.device('cuda')
+print(f"Device is: {device}")
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
@@ -189,13 +200,14 @@ train_set = transform_dataloader(args_settings.sentence_segmentation, train)
 
 train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 
-# Load the LLMs
+# Load the LLMs and mount onto CUDA
 model, tokenizer = load_llm_model(args_settings.llm_name)
+model.to(device)
 
 for epoch in range(args_settings.epoch + 1):
 
     # Train the model
-    start_fine_tuning(model, tokenizer, train_loader)
+    start_fine_tuning(model, tokenizer, train_loader, device)
 
     # Evaluate on the validation dataset
 
