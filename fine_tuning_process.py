@@ -14,6 +14,17 @@ import re
 import torch
 import argparse
 
+def _collate_padding_efficiency(batch_list):
+    
+    # Find the maximum length, based on tokenization
+
+    # Find the token number for padding
+
+    # Add the padding to the maximum
+
+    # Return the batch list
+    return ...
+
 def _sentence_segmentation_process(row):
 
     # Split sentences
@@ -42,10 +53,11 @@ def _prepare_dataloader(dataset, tokenizer):
     for _, row in dataset.iterrows():
 
         # Tokenize and process
-        tokenized_text = tokenizer(
+        tokenized_text = tokenizer.encode_plus(
             dataset_processors.preprocess_text(row['text']), 
             padding='max_length', 
-            truncation=True, 
+            max_length = 512,
+            truncation=True,
             return_tensors='pt'
         )
 
