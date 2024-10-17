@@ -12,6 +12,10 @@ The source code for this project is licensed under the [MIT license](LICENSE.md)
 4. Evaluation metrics
 5. Visualization of Results
 
+# Execution
+
+For fine-tuning: python fine_tuning_process.py -ss True -pm bert
+
 ## Sliding Window Concept
 
 ### Fine-tuning
