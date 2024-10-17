@@ -16,6 +16,10 @@ The source code for this project is licensed under the [MIT license](LICENSE.md)
 
 For fine-tuning: python fine_tuning_process.py -ss True -pm bert
 
+For dataset transformation:
+
+For training model with LLMs:
+
 ## Sliding Window Concept
 
 ### Fine-tuning

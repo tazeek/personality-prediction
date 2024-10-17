@@ -1,4 +1,4 @@
-from transformers import BertForSequenceClassification, BertTokenizer, RobertaForSequenceClassification, RobertaTokenizer, XLNetForSequenceClassification, XLNetTokenizer, ElectraForSequenceClassification, ElectraTokenizer, AlbertForSequenceClassification, AlbertTokenizer
+from transformers import BertForSequenceClassification, BertTokenizer, RobertaForSequenceClassification, RobertaTokenizer, XLNetForSequenceClassification, XLNetTokenizer, ElectraForSequenceClassification, ElectraTokenizer, AlbertForSequenceClassification, AlbertTokenizer, DistilBertForSequenceClassification, DistilBertTokenizer
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.nn import BCEWithLogitsLoss
@@ -70,7 +70,7 @@ def load_default_hyperparams():
 
     # Model related
     parser.add_argument("--llm_name", "-pm", type=str, default="bert",
-        choices=["bert", "roberta", "xlnet", "electra", "albert"])
+        choices=["bert", "roberta", "xlnet", "electra", "albert", "distilbert"])
     
     # Hyperparameters for fine-tuning
     parser.add_argument("--train_split", "--train_split", type=float, default=0.6)
@@ -92,6 +92,7 @@ def load_llm_model(model_name):
         'bert': (BertForSequenceClassification, BertTokenizer, "bert-base-uncased"),
         'roberta': (RobertaForSequenceClassification, RobertaTokenizer, "roberta-base"),
         'xlnet': (XLNetForSequenceClassification, XLNetTokenizer, 'xlnet-base-cased'),
+        'distilbert': (DistilBertForSequenceClassification, DistilBertTokenizer, 'distilbert-base-uncased'),
         'electra': (ElectraForSequenceClassification, ElectraTokenizer, 'google/electra-base-discriminator'),
         'albert': (AlbertForSequenceClassification, AlbertTokenizer, "albert-base-v2")
     } 
@@ -154,15 +155,16 @@ def transform_dataloader(use_sentence_segmentation, dataset, tokenizer):
     # Transformation and return the DataLoader
     return _prepare_dataloader(dataset, tokenizer)
 
-def start_fine_tuning(model, tokenizer, train_set, device):
+def start_fine_tuning(model, train_set, device):
 
     # Initiate optimizer
     model.train()
 
     optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
     loss_function = BCEWithLogitsLoss()
-    accumulation_steps = 4
     total_loss = 0
+
+    exit_steps = 15
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
@@ -192,14 +194,48 @@ def start_fine_tuning(model, tokenizer, train_set, device):
         # Update the model weights and gradients
         optimizer.zero_grad()
         optimizer.step()
+
+        if i == exit_steps:
+            break
     
     return total_loss
+
+def evaluate_model(model, val_set, device):
+
+    gold_labels = []
+    predicted_labels = []
+
+    # Iterate the test set
+    for batch_set in tqdm(val_set, ncols=50):
+
+        input_tokens, attention, labels = batch_set
+
+        # Flatten the dimension
+        input_tokens = input_tokens.squeeze(1)
+        attention = attention.squeeze(1)
+
+        input_tokens = input_tokens.to(device, non_blocking=True)
+        attention = attention.to(device, non_blocking=True)
+
+        # Feed into the model
+        outputs = model(
+            input_ids = input_tokens,
+            attention_mask = attention
+        )
+
+        # Get the logits and convert to scores
+
+        # Extend and keep with gold labels and predicted labels
+
+    # Evaluate gold label scores
+
+    return None
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
 
 # Get CUDA device
-device = torch.device('cuda:0')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(f"Device is: {device}")
 
 # Load the LLMs and mount onto CUDA
@@ -225,7 +261,7 @@ val_loader = DataLoader(val_set, args_settings.batch_size, shuffle=False, pin_me
 for epoch in range(args_settings.epoch + 1):
 
     # Train the model
-    loss_amount = start_fine_tuning(model, tokenizer, train_loader, device)
+    loss_amount = start_fine_tuning(model, train_loader, device)
     print(loss_amount)
 
     # Evaluate on the validation dataset
