@@ -13,9 +13,6 @@ class Evaluator():
     def _save_file_csv(self, data, file_name):
         ...
 
-    def confusion_matrix(self, gold, predicted):
-        ...
-
     def calculate_scores(self, gold, predicted):
 
         f1_scores = []
@@ -28,6 +25,9 @@ class Evaluator():
 
             accuracy_scores.append(accuracy_score)
             f1_scores.append(f1_score)
+
+        # Get confusion matrix and save
+        confusion_matrices = multilabel_confusion_matrix(gold, predicted)
 
         return None
 
