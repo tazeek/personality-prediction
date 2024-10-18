@@ -176,7 +176,7 @@ def start_fine_tuning(model, train_set, device):
     loss_function = BCEWithLogitsLoss()
     total_loss = 0
 
-    exit_steps = 15
+    exit_steps = 5
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
@@ -281,8 +281,9 @@ for epoch in range(args_settings.epoch + 1):
     # Evaluate on the test dataset
 
     # Display the update per epoch (Validation + Test)
+    break
 
-    quit()
-
-# Save the model
+# Save the model and tokenizer
+model.save_pretrained('./fine-tuned-sentence-bert')
+tokenizer.save_pretrained('./fine-tuned-sentence-bert')
 
