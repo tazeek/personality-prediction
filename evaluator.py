@@ -33,8 +33,13 @@ class Evaluator():
         f1_scores = []
         accuracy_scores = []
 
+        gold = np.array(gold)
+        predicted = np.array(predicted)
+
         print(gold)
         print(predicted)
+        print(gold[:, 0])
+        print(predicted[:, 0])
         quit()
 
         for i in range(self._num_labels):
