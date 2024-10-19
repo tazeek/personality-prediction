@@ -46,6 +46,7 @@ class Evaluator():
             accuracy = accuracy_score(gold[:, i], predicted[:, i])
 
             print(f"{label}: (Accuracy - {accuracy:.4f}), (F1 - {f1:.4f})")
+            print("\n")
 
         # Get confusion matrix and save
         confusion_matrices = multilabel_confusion_matrix(gold, predicted)

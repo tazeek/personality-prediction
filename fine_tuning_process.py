@@ -154,16 +154,6 @@ def splitting(dataset, ratio_split):
     
     return train_data, test_data, validation_data
 
-def label_dictionaries(columns):
-
-    labels = [label for label in columns if label not in ['user','text','token_len']]
-
-    # Forward and backward mapping
-    id2label = {idx:label for idx,label in enumerate(labels)}
-    label2id = {label:idx for idx,label in enumerate(labels)}
-
-    return id2label, label2id
-
 def transform_dataloader(use_sentence_segmentation, dataset, tokenizer):
 
     new_dataentries_list = []
@@ -189,8 +179,6 @@ def start_fine_tuning(model, train_set, device):
     optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
     loss_function = BCEWithLogitsLoss()
     total_loss = 0
-
-    exit_steps = 5
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
@@ -220,9 +208,6 @@ def start_fine_tuning(model, train_set, device):
         # Update the model weights and gradients
         optimizer.zero_grad()
         optimizer.step()
-
-        if i == exit_steps:
-            break
     
     return total_loss
 
@@ -258,8 +243,6 @@ def evaluate_model(model, val_set, evaluator, device):
 
             predicted_labels.extend(pred_labels)
             gold_labels.extend(labels.numpy())
-
-            break
 
     # Evaluate gold label scores and display
     evaluator.calculate_scores(gold_labels, predicted_labels)
@@ -300,13 +283,11 @@ for epoch in range(args_settings.epoch + 1):
     # Train the model
     print(f"Epoch {epoch}: Training")
     loss_amount = start_fine_tuning(model, train_loader, device)
-    print(loss_amount)
+    print(f"Loss: {loss_amount}")
 
     # Evaluate on the test dataset
     print(f"Epoch {epoch}: Testing")
     evaluate_model(model, test_loader, evaluator, device)
-
-    break
 
 # Save the model and tokenizer
 model.save_pretrained('./fine-tuned-sentence-bert')
