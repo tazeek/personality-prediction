@@ -188,9 +188,9 @@ def start_fine_tuning(model, train_set, device):
         input_tokens = input_tokens.squeeze(1)
         attention = attention.squeeze(1)
 
-        input_tokens = input_tokens.to(device, non_blocking=True)
-        attention = attention.to(device, non_blocking=True)
-        labels = labels.to(device, non_blocking=True)
+        input_tokens = input_tokens.to(device)
+        attention = attention.to(device)
+        labels = labels.to(device)
 
         # Feed into the model
         outputs = model(
@@ -214,6 +214,8 @@ def start_fine_tuning(model, train_set, device):
     return total_loss
 
 def evaluate_model(model, val_set, device):
+
+    model.eval()
 
     gold_labels = []
     predicted_labels = []
@@ -250,7 +252,7 @@ def evaluate_model(model, val_set, device):
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
-evaluator = Evaluator()
+evaluator = Evaluator(5)
 
 # Get CUDA device
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -271,18 +273,20 @@ train, test, _ = splitting(dataset_full, args_settings.train_split)
 train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
 test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
 
-train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False, pin_memory=True)
-test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False, pin_memory=True)
+train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
+test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False)
 
 for epoch in range(args_settings.epoch + 1):
 
     # Train the model
+    print(f"Epoch {epoch}: Training")
     loss_amount = start_fine_tuning(model, train_loader, device)
     print(loss_amount)
 
     # Evaluate on the test dataset
+    print(f"Epoch {epoch}: Testing")
     evaluate_model(model, test_loader, device)
-    
+
     break
 
 # Save the model and tokenizer
