@@ -5,6 +5,7 @@ from torch.nn import BCEWithLogitsLoss
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from evaluator import Evaluator
 from utils.data_utils import DatasetLoader
 
 import utils.dataset_processors as dataset_processors
@@ -239,12 +240,13 @@ def evaluate_model(model, val_set, device):
 
         # Extend and keep with gold labels and predicted labels
 
-    # Evaluate gold label scores
+    # Evaluate gold label scores and display
 
     return None
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
+evaluator = Evaluator()
 
 # Get CUDA device
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -259,16 +261,14 @@ dataset_name = "essays"
 dataset_full = load_dataset(dataset_name)
 
 # Split the dataset: 60% for Training, 20% for Testing, 20% for validation
-train, test, validation = splitting(dataset_full, args_settings.train_split)
+train, test, _ = splitting(dataset_full, args_settings.train_split)
 
 # Transform the dataset (DataLoader)
 train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
 test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
-val_set = transform_dataloader(args_settings.sentence_segmentation, validation, tokenizer)
 
 train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False, pin_memory=True)
 test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False, pin_memory=True)
-val_loader = DataLoader(val_set, args_settings.batch_size, shuffle=False, pin_memory=True)
 
 for epoch in range(args_settings.epoch + 1):
 
@@ -276,11 +276,8 @@ for epoch in range(args_settings.epoch + 1):
     loss_amount = start_fine_tuning(model, train_loader, device)
     print(loss_amount)
 
-    # Evaluate on the validation dataset
-
     # Evaluate on the test dataset
 
-    # Display the update per epoch (Validation + Test)
     break
 
 # Save the model and tokenizer
