@@ -26,6 +26,9 @@ def _collate_padding_efficiency(batch_list):
     # Return the batch list
     return ...
 
+def _get_labels_list():
+    return ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+
 def _sentence_segmentation_process(row):
 
     # Split sentences
@@ -45,7 +48,7 @@ def _sentence_segmentation_process(row):
 
 def _prepare_dataloader(dataset, tokenizer):
 
-    labels_list = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+    labels_list = _get_labels_list()
 
     token_entries = []
     attention_entries = []
@@ -213,7 +216,7 @@ def start_fine_tuning(model, train_set, device):
     
     return total_loss
 
-def evaluate_model(model, val_set, device):
+def evaluate_model(model, val_set, evaluator, device):
 
     model.eval()
 
@@ -241,11 +244,15 @@ def evaluate_model(model, val_set, device):
 
             # Extend and keep with gold labels and predicted labels
             logits = outputs.logits.cpu()
-            predicted_labels.append(logits)
+            pred_labels = evaluator.convert_predictions(logits)
+
+            predicted_labels.append(pred_labels)
             gold_labels.append(labels)
+
             break
 
     # Evaluate gold label scores and display
+    evaluator.calculate_scores(gold_labels, predicted_labels)
 
     return None
 
@@ -284,7 +291,7 @@ for epoch in range(args_settings.epoch + 1):
 
     # Evaluate on the test dataset
     print(f"Epoch {epoch}: Testing")
-    evaluate_model(model, test_loader, device)
+    evaluate_model(model, test_loader, evaluator, device)
 
     break
 

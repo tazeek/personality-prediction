@@ -13,8 +13,14 @@ class Evaluator():
 
         self._sigmoid = Sigmoid()
 
-    def _convert_predictions(self, pred_logits):
-        probs = self._sigmoid(torch.Tensor(pred_logits))
+    def _save_file_pickle(self, data, file_name):
+        ...
+
+    def _save_file_csv(self, data, file_name):
+        ...
+
+    def convert_predictions(self, pred_logits):
+        probs = self._sigmoid(pred_logits)
 
         # Convert predictions to integer predictions
         y_pred = np.zeros(probs.shape)
@@ -22,26 +28,26 @@ class Evaluator():
 
         return y_pred
 
-    def _save_file_pickle(self, data, file_name):
-        ...
-
-    def _save_file_csv(self, data, file_name):
-        ...
-
     def calculate_scores(self, gold, predicted):
 
         f1_scores = []
         accuracy_scores = []
 
-        predicted = self._convert_predictions(predicted)
+        print(gold)
+        print(predicted)
+        quit()
 
-        for i in range(self.num_labels):
+        for i in range(self._num_labels):
+            
+            print(i)
+            f1 = f1_score(gold[:, i], predicted[:, i])
+            accuracy = accuracy_score(gold[:, i], predicted[:, i])
+            print(f1)
+            print(accuracy)
+            quit()
 
-            f1_score = f1_score(gold[:, i], predicted[:, i])
-            accuracy_score = accuracy_score(gold[:, i], predicted[:, i])
-
-            accuracy_scores.append(accuracy_score)
-            f1_scores.append(f1_score)
+            accuracy_scores.append(accuracy)
+            f1_scores.append(f1)
 
         # Get confusion matrix and save
         confusion_matrices = multilabel_confusion_matrix(gold, predicted)
