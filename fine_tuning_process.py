@@ -26,6 +26,16 @@ def _collate_padding_efficiency(batch_list):
     # Return the batch list
     return ...
 
+def _get_file_name(llm_model, is_segmented):
+
+    # File name: fine-tuned-{llm} or fine-tuned-bert-segmented
+    default = f"fine-tuned-{llm_model}"
+
+    if is_segmented:
+        return f"{default}-segmented"
+    
+    return default
+
 def _get_labels_list():
     return ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -246,8 +256,8 @@ def evaluate_model(model, val_set, evaluator, device):
             logits = outputs.logits.cpu()
             pred_labels = evaluator.convert_predictions(logits)
 
-            predicted_labels.append(pred_labels)
-            gold_labels.append(labels)
+            predicted_labels.extend(pred_labels)
+            gold_labels.extend(labels.numpy())
 
             break
 
