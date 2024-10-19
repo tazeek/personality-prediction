@@ -268,7 +268,10 @@ def evaluate_model(model, val_set, evaluator, device):
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
-evaluator = Evaluator(5)
+file_name = _get_file_name(args_settings.llm_name, args_settings.sentence_segmentation)
+labels_list = _get_labels_list()
+
+evaluator = Evaluator(file_name, labels_list)
 
 # Get CUDA device
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

@@ -2,21 +2,25 @@ from sklearn.metrics import f1_score, accuracy_score, multilabel_confusion_matri
 from torch.nn import Sigmoid
 
 import torch
+import pickle
 import numpy as np
 
 class Evaluator():
 
-    def __init__(self, num_labels, threshold=0.5):
+    def __init__(self, file_name, labels, threshold=0.5):
 
-        self._num_labels = num_labels
+        self._labels = labels
         self._threshold = threshold
+        self._file_name = file_name
 
         self._sigmoid = Sigmoid()
 
-    def _save_file_pickle(self, data, file_name):
-        ...
+    def _save_file_pickle(self, data):
 
-    def _save_file_csv(self, data, file_name):
+        with open(f'{self._file_name}_cm_data.pkl', 'wb') as handle:
+            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def _save_file_csv(self, data):
         ...
 
     def convert_predictions(self, pred_logits):
@@ -36,22 +40,16 @@ class Evaluator():
         gold = np.array(gold)
         predicted = np.array(predicted)
 
-        for i in range(self._num_labels):
-            
-            print(i)
+        for i, label in enumerate(self._labels):
+
             f1 = f1_score(gold[:, i], predicted[:, i])
             accuracy = accuracy_score(gold[:, i], predicted[:, i])
 
-            accuracy_scores.append(accuracy)
-            f1_scores.append(f1)
-            break
+            print(f"{label}: (Accuracy - {accuracy:.4f}), (F1 - {f1:.4f})")
 
         # Get confusion matrix and save
         confusion_matrices = multilabel_confusion_matrix(gold, predicted)
-        print(type(confusion_matrices))
-        print(len(confusion_matrices))
-        print(confusion_matrices[0])
-        quit()
+        self._save_file_pickle(confusion_matrices)
 
         return None
 
