@@ -36,26 +36,22 @@ class Evaluator():
         gold = np.array(gold)
         predicted = np.array(predicted)
 
-        print(gold)
-        print(predicted)
-        print(gold[:, 0])
-        print(predicted[:, 0])
-        quit()
-
         for i in range(self._num_labels):
             
             print(i)
             f1 = f1_score(gold[:, i], predicted[:, i])
             accuracy = accuracy_score(gold[:, i], predicted[:, i])
-            print(f1)
-            print(accuracy)
-            quit()
 
             accuracy_scores.append(accuracy)
             f1_scores.append(f1)
+            break
 
         # Get confusion matrix and save
         confusion_matrices = multilabel_confusion_matrix(gold, predicted)
+        print(type(confusion_matrices))
+        print(len(confusion_matrices))
+        print(confusion_matrices[0])
+        quit()
 
         return None
 
