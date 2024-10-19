@@ -236,9 +236,13 @@ def evaluate_model(model, val_set, device):
             attention_mask = attention
         )
 
-        # Get the logits and convert to scores
-
         # Extend and keep with gold labels and predicted labels
+        predicted_labels.append(outputs)
+        gold_labels.append(labels)
+    
+    print(len(predicted_labels))
+    print(len(gold_labels))
+    quit()
 
     # Evaluate gold label scores and display
 
@@ -277,7 +281,8 @@ for epoch in range(args_settings.epoch + 1):
     print(loss_amount)
 
     # Evaluate on the test dataset
-
+    evaluate_model(model, test_loader, device)
+    
     break
 
 # Save the model and tokenizer
