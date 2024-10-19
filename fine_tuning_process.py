@@ -233,18 +233,17 @@ def evaluate_model(model, val_set, device):
         attention = attention.to(device, non_blocking=True)
 
         # Feed into the model
-        outputs = model(
-            input_ids = input_tokens,
-            attention_mask = attention
-        )
+        with torch.no_grad():
+            outputs = model(
+                input_ids = input_tokens,
+                attention_mask = attention
+            )
 
-        # Extend and keep with gold labels and predicted labels
-        predicted_labels.append(outputs)
-        gold_labels.append(labels)
-    
-    print(len(predicted_labels))
-    print(len(gold_labels))
-    quit()
+            # Extend and keep with gold labels and predicted labels
+            logits = outputs.logits.cpu()
+            predicted_labels.append(logits)
+            gold_labels.append(labels)
+            break
 
     # Evaluate gold label scores and display
 
@@ -273,8 +272,8 @@ train, test, _ = splitting(dataset_full, args_settings.train_split)
 train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
 test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
 
-train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
-test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False)
+train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False, pin_memory=True)
+test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False, pin_memory=True)
 
 for epoch in range(args_settings.epoch + 1):
 
