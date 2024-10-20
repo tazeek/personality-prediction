@@ -182,6 +182,8 @@ def start_fine_tuning(model, train_set, device):
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
+        
+        optimizer.zero_grad()
 
         input_tokens, attention, labels = batch_set
 
@@ -201,12 +203,10 @@ def start_fine_tuning(model, train_set, device):
         
         # Find the loss
         loss = loss_function(outputs.logits, labels)
-        loss.backward()
-
         total_loss += loss.cpu().item()
 
         # Update the model weights and gradients
-        optimizer.zero_grad()
+        loss.backward()
         optimizer.step()
     
     return total_loss
