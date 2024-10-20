@@ -34,9 +34,6 @@ class Evaluator():
 
     def calculate_scores(self, gold, predicted):
 
-        f1_scores = []
-        accuracy_scores = []
-
         gold = np.array(gold)
         predicted = np.array(predicted)
 

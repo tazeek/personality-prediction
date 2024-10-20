@@ -173,17 +173,16 @@ def transform_dataloader(use_sentence_segmentation, dataset, tokenizer):
 
 def start_fine_tuning(model, train_set, device):
 
-    # Initiate optimizer
+    
     model.train()
 
+    # Initiate optimizer
     optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
     loss_function = BCEWithLogitsLoss()
     total_loss = 0
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
-        
-        optimizer.zero_grad()
 
         input_tokens, attention, labels = batch_set
 
@@ -206,10 +205,19 @@ def start_fine_tuning(model, train_set, device):
         total_loss += loss.cpu().item()
 
         # Update the model weights and gradients
+        optimizer.zero_grad()
         loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(
+            model.parameters(), 10.0
+        )
+
         optimizer.step()
+
+        if i == 10:
+            break
     
-    return total_loss
+    return model, total_loss
 
 def evaluate_model(model, val_set, evaluator, device):
 
@@ -282,7 +290,7 @@ for epoch in range(args_settings.epoch + 1):
 
     # Train the model
     print(f"Epoch {epoch}: Training")
-    loss_amount = start_fine_tuning(model, train_loader, device)
+    model, loss_amount = start_fine_tuning(model, train_loader, device)
     print(f"Loss: {loss_amount}")
 
     # Evaluate on the test dataset
