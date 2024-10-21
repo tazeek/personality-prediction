@@ -149,8 +149,8 @@ def load_dataset(dataset_name):
 
 def splitting(dataset, ratio_split):
 
-    train_data, test_data = train_test_split(dataset, train_size=ratio_split, random_state=42)
-    validation_data, test_data = train_test_split(test_data, train_size=0.5, random_state=42)
+    train_data, temp_data = train_test_split(dataset, train_size=ratio_split, random_state=42)
+    validation_data, test_data = train_test_split(temp_data, train_size=0.5, random_state=42)
     
     return train_data, test_data, validation_data
 
@@ -252,9 +252,6 @@ def evaluate_model(model, val_set, evaluator, device):
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
-print(args_settings)
-quit()
-
 file_name = _get_file_name(args_settings.llm_name, args_settings.segment)
 labels_list = _get_labels_list()
 
@@ -274,6 +271,8 @@ dataset_full = load_dataset(dataset_name)
 
 # Split the dataset: 60% for Training, 20% for Testing, 20% for validation
 train, test, _ = splitting(dataset_full, args_settings.train_split)
+print(len(test))
+quit()
 
 # Transform the dataset (DataLoader)
 train_set = transform_dataloader(args_settings.segment, train, tokenizer)

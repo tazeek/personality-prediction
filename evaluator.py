@@ -29,6 +29,7 @@ class Evaluator():
         # Convert predictions to integer predictions
         y_pred = np.zeros(probs.shape)
         y_pred[np.where(probs >= self._threshold)] = 1
+        y_pred = y_pred.astype(int)
 
         return y_pred
 
