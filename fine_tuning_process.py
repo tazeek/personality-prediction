@@ -102,13 +102,15 @@ def load_default_hyperparams():
     parser.add_argument("--test_split", "--test_split", type=float, default=0.5)
     parser.add_argument("--dataset", "-ds", type=str, default="essays")
     parser.add_argument("--epoch", "-ep", type=int, default=10)
-    parser.add_argument("--sentence_segmentation", "-ss", type=bool, default=True)
     parser.add_argument("--batch_size", "-bs", type=int, default=16)
     parser.add_argument("--learning_rate", "-lr", type=float, default=2e-5)
     parser.add_argument("--weight_decay", "--wc", type=float, default=0.01)
+
+    # For sentence segmentation
+    parser.add_argument('--segment', dest='segment', action='store_true')
+    parser.set_defaults(segment=False)
     
     return parser.parse_args()
-
 
 def load_llm_model(model_name):
 
@@ -218,7 +220,7 @@ def evaluate_model(model, val_set, evaluator, device):
 
     # Iterate the test set
     with torch.no_grad():
-        
+
         for batch_set in tqdm(val_set, ncols=50):
 
             input_tokens, attention, labels = batch_set
@@ -250,7 +252,10 @@ def evaluate_model(model, val_set, evaluator, device):
 
 # Load hyperparameters settings
 args_settings = load_default_hyperparams()
-file_name = _get_file_name(args_settings.llm_name, args_settings.sentence_segmentation)
+print(args_settings)
+quit()
+
+file_name = _get_file_name(args_settings.llm_name, args_settings.segment)
 labels_list = _get_labels_list()
 
 evaluator = Evaluator(file_name, labels_list)
@@ -261,8 +266,6 @@ print(f"Device is: {device}")
 
 # Load the LLMs and mount onto CUDA
 model, tokenizer = load_llm_model(args_settings.llm_name)
-print(model)
-quit()
 model = model.to(device)
 
 # Load the dataset
@@ -273,8 +276,8 @@ dataset_full = load_dataset(dataset_name)
 train, test, _ = splitting(dataset_full, args_settings.train_split)
 
 # Transform the dataset (DataLoader)
-train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
-test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
+train_set = transform_dataloader(args_settings.segment, train, tokenizer)
+test_set = transform_dataloader(args_settings.segment, test, tokenizer)
 
 train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
 test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False)
