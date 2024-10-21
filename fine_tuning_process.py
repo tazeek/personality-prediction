@@ -1,7 +1,6 @@
-from transformers import BertForSequenceClassification, BertTokenizer, RobertaForSequenceClassification, RobertaTokenizer, XLNetForSequenceClassification, XLNetTokenizer, ElectraForSequenceClassification, ElectraTokenizer, AlbertForSequenceClassification, AlbertTokenizer, DistilBertForSequenceClassification, DistilBertTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from torch.utils.data import DataLoader
 from torch.optim import Adam
-from torch.nn import BCEWithLogitsLoss
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
@@ -115,22 +114,22 @@ def load_llm_model(model_name):
 
     # Models used: BERT, RoBERTa, XLNet, ELECTRA, Albert
     model_list = {
-        'bert': (BertForSequenceClassification, BertTokenizer, "bert-base-uncased"),
-        'roberta': (RobertaForSequenceClassification, RobertaTokenizer, "roberta-base"),
-        'xlnet': (XLNetForSequenceClassification, XLNetTokenizer, 'xlnet-base-cased'),
-        'distilbert': (DistilBertForSequenceClassification, DistilBertTokenizer, 'distilbert-base-uncased'),
-        'electra': (ElectraForSequenceClassification, ElectraTokenizer, 'google/electra-base-discriminator'),
-        'albert': (AlbertForSequenceClassification, AlbertTokenizer, "albert-base-v2")
+        'bert': "bert-base-uncased",
+        'roberta': "roberta-base",
+        'xlnet': 'xlnet-base-cased',
+        'distilbert': 'distilbert-base-uncased',
+        'electra': 'google/electra-base-discriminator',
+        'albert': "albert-base-v2"
     } 
 
-    model_class, tokenizer_class, model_version = model_list[model_name]
+    model_version = model_list[model_name]
 
-    tokenizer = tokenizer_class.from_pretrained(
+    tokenizer = AutoTokenizer.from_pretrained(
         model_version,
         do_lower_case = True
     )
 
-    model = model_class.from_pretrained(
+    model = AutoModelForSequenceClassification.from_pretrained(
         model_version,
         num_labels = 5,
         problem_type = "multi_label_classification"
@@ -176,7 +175,6 @@ def start_fine_tuning(model, train_set, device):
 
     # Initiate optimizer
     optimizer = Adam(model.parameters(), weight_decay=0.01, lr=2e-5)
-    loss_function = BCEWithLogitsLoss()
     total_loss = 0
 
     # Start iterating the batch
@@ -219,19 +217,20 @@ def evaluate_model(model, val_set, evaluator, device):
     predicted_labels = []
 
     # Iterate the test set
-    for batch_set in tqdm(val_set, ncols=50):
+    with torch.no_grad():
+        
+        for batch_set in tqdm(val_set, ncols=50):
 
-        input_tokens, attention, labels = batch_set
+            input_tokens, attention, labels = batch_set
 
-        # Flatten the dimension
-        input_tokens = input_tokens.squeeze(1)
-        attention = attention.squeeze(1)
+            # Flatten the dimension
+            input_tokens = input_tokens.squeeze(1)
+            attention = attention.squeeze(1)
 
-        input_tokens = input_tokens.to(device)
-        attention = attention.to(device)
+            input_tokens = input_tokens.to(device)
+            attention = attention.to(device)
 
-        # Feed into the model
-        with torch.no_grad():
+            # Feed into the model
             outputs = model(
                 input_ids = input_tokens,
                 attention_mask = attention
@@ -262,6 +261,8 @@ print(f"Device is: {device}")
 
 # Load the LLMs and mount onto CUDA
 model, tokenizer = load_llm_model(args_settings.llm_name)
+print(model)
+quit()
 model = model.to(device)
 
 # Load the dataset
