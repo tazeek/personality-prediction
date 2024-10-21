@@ -133,8 +133,7 @@ def load_llm_model(model_name):
     model = model_class.from_pretrained(
         model_version,
         num_labels = 5,
-        problem_type = "multi_label_classification",
-        output_hidden_states = True
+        problem_type = "multi_label_classification"
     )
 
     return model, tokenizer
@@ -173,7 +172,6 @@ def transform_dataloader(use_sentence_segmentation, dataset, tokenizer):
 
 def start_fine_tuning(model, train_set, device):
 
-    
     model.train()
 
     # Initiate optimizer
@@ -183,6 +181,8 @@ def start_fine_tuning(model, train_set, device):
 
     # Start iterating the batch
     for i, batch_set in enumerate(tqdm(train_set, ncols=50)):
+
+        optimizer.zero_grad()
 
         input_tokens, attention, labels = batch_set
 
@@ -197,25 +197,17 @@ def start_fine_tuning(model, train_set, device):
         # Feed into the model
         outputs = model(
             input_ids = input_tokens,
-            attention_mask = attention
+            attention_mask = attention,
+            labels = labels
         )
         
         # Find the loss
-        loss = loss_function(outputs.logits, labels)
+        loss = outputs.loss
         total_loss += loss.cpu().item()
 
         # Update the model weights and gradients
-        optimizer.zero_grad()
         loss.backward()
-
-        torch.nn.utils.clip_grad_norm_(
-            model.parameters(), 10.0
-        )
-
         optimizer.step()
-
-        if i == 10:
-            break
     
     return model, total_loss
 
@@ -235,8 +227,8 @@ def evaluate_model(model, val_set, evaluator, device):
         input_tokens = input_tokens.squeeze(1)
         attention = attention.squeeze(1)
 
-        input_tokens = input_tokens.to(device, non_blocking=True)
-        attention = attention.to(device, non_blocking=True)
+        input_tokens = input_tokens.to(device)
+        attention = attention.to(device)
 
         # Feed into the model
         with torch.no_grad():
@@ -283,8 +275,8 @@ train, test, _ = splitting(dataset_full, args_settings.train_split)
 train_set = transform_dataloader(args_settings.sentence_segmentation, train, tokenizer)
 test_set = transform_dataloader(args_settings.sentence_segmentation, test, tokenizer)
 
-train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False, pin_memory=True)
-test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False, pin_memory=True)
+train_loader = DataLoader(train_set, args_settings.batch_size, shuffle=False)
+test_loader = DataLoader(test_set, args_settings.batch_size, shuffle=False)
 
 for epoch in range(args_settings.epoch + 1):
 
