@@ -1,10 +1,25 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoConfig
-from sklearn.model_selection import StratifiedKFold
 from sota_list import *
 
 import torch
 import pickle
 import utils.dataset_processors as dataset_processors
+
+def create_file_name(args):
+
+    # Create the file name
+
+def fetch_model_name(args):
+
+    # Create model name
+
+    # Get the model name, tokenizer, and config
+
+    # Return all three
+
+def load_llm_parts(filenames):
+
+    # Load the config, model, and tokenizer
 
 # Load BERT tokenizer and model (fine-tuned)
 model_name = "xlnet-base-cased"
@@ -43,7 +58,6 @@ def prepare_data(row):
     return cls_embedding, merged_labels
 
 # Load the dataset and pre-process
-# Split using K-Fold cross validation (4)
 datafile = "data/essays/essays.csv"
 dataset = dataset_processors.load_essays_df(datafile)
 
