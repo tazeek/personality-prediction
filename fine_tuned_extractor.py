@@ -2,35 +2,35 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Auto
 from sota_list import *
 
 import torch
+import argparse
 import pickle
 import utils.dataset_processors as dataset_processors
 
-def create_file_name(args):
-
-    # Create the file name
-    ...
-
-def fetch_model_name(args):
+def load_args():
 
     # Create model name
+    parser = argparse.ArgumentParser()
 
-    # Get the model name, tokenizer, and config
+    # Model related
+    parser.add_argument("--model_name", "-mn", type=str)
+    parser.add_argument("--file_name", "-fn", type=str)
 
-    # Return all three
-    ...
+    return parser.parse_args()
 
-def load_llm_parts(filenames):
+def load_llm_parts(model_name):
 
     # Load the config, model, and tokenizer
-    ...
+    config = AutoConfig.from_pretrained(model_name, output_hidden_states =True)
+
+    return [
+        AutoModelForSequenceClassification.from_pretrained(model_name, config=config),
+        AutoTokenizer.from_pretrained(model_name)
+    ]
 
 # Load BERT tokenizer and model (fine-tuned)
-model_name = "xlnet-base-cased"
-file_name = "xlnet-normal"
+args_settings = load_args()
 
-config = AutoConfig.from_pretrained(model_name, output_hidden_states =True)
-model = AutoModelForSequenceClassification.from_pretrained(model_name, config=config)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model, tokenizer = load_llm_parts(args_settings.model_name)
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -76,5 +76,5 @@ for index, row in dataset.iterrows():
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
 
-with open(f'{file_name}.pkl', 'wb') as f:
+with open(f'{args_settings.file_name}.pkl', 'wb') as f:
     pickle.dump(zip(cls_features, merged_labels), f)
