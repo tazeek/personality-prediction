@@ -23,6 +23,7 @@ def _collate_padding_efficiency(batch_list):
     # Add the padding to the maximum
 
     # Return the batch list
+    
     return ...
 
 def _get_file_name(llm_model, is_segmented):
