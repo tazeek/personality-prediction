@@ -29,6 +29,7 @@ def load_llm_parts(model_name):
 
 # Load BERT tokenizer and model (fine-tuned)
 args_settings = load_args()
+print(args_settings)
 
 model, tokenizer = load_llm_parts(args_settings.model_name)
 
@@ -37,10 +38,10 @@ labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 def prepare_data(row):
 
     # Tokenize sentence
-    essays = row['text']
+    essay = row['text']
 
     # Encode them using the tokenizer
-    encoded_essay = tokenizer(essays, truncation = True, return_tensors='pt')
+    encoded_essay = tokenizer(essay, truncation = True, return_tensors='pt')
 
     # Convert to embeddings via CLS token
     cls_embedding = []
@@ -58,23 +59,25 @@ def prepare_data(row):
     merged_labels = [row[key] for key in row.keys() if key in labels]
 
     # Return the sentence and label
-    return cls_embedding, merged_labels
+    return cls_embedding, essay, merged_labels
 
 # Load the dataset and pre-process
 datafile = "data/essays/essays.csv"
 dataset = dataset_processors.load_essays_df(datafile)
 
 cls_features = []
+input_samples = []
 merged_labels = []
 
 for index, row in dataset.iterrows():
-    bert_output, multi_labels = prepare_data(row)
+    bert_output, input_sample, multi_labels = prepare_data(row)
 
     cls_features.append(bert_output)
+    input_samples.append(input_sample)
     merged_labels.append(multi_labels)
 
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
 
 with open(f'{args_settings.file_name}.pkl', 'wb') as f:
-    pickle.dump(zip(cls_features, merged_labels), f)
+    pickle.dump(zip(cls_features, input_samples, merged_labels), f)
