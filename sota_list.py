@@ -58,6 +58,8 @@ class LSTMNetwork(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, bidirectional=True, batch_first=True)
         self.fc = nn.Linear(hidden_size * 2, output_size)
 
+        # Add attention layer -> TODO:
+
     def features_extraction(self, x):
 
         # Initialize hidden state with zeros

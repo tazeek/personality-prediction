@@ -9,6 +9,7 @@ from sota_list import *
 from tqdm import tqdm
 from utils.data_utils import FineTunedDataset
 
+import argparse
 import random
 import numpy as np
 import pickle
@@ -17,6 +18,17 @@ import torch.nn as nn
 
 person_labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 id2label = {idx:label for idx,label in enumerate(person_labels)}
+
+def load_args():
+
+    # Create model name
+    parser = argparse.ArgumentParser()
+
+    # Model related
+    parser.add_argument("--file_name", "-fn", type=str)
+    parser.add_argument("--model", "-m", type=str, default="lstm")
+
+    return parser.parse_args()
 
 def file_name_mapper(file_name):
     return {
@@ -29,15 +41,13 @@ def load_data(file_name):
     processed_data, labels = [], []
 
     # Get the file name
-    file_name = 'bert-tuned_segmented'
-    #file_name = file_name_mapper(file_name)
     print(f"Loading file: {file_name}.pkl\n")
 
     with open(f'{file_name}.pkl', 'rb') as file:
         data = pickle.load(file)
-        processed_data, labels = list(zip(*data))
+        processed_data, input_samples, labels = list(zip(*data))
 
-    return processed_data, labels
+    return processed_data, input_samples, labels
 
 def load_model(model_name):
     return {
@@ -88,6 +98,7 @@ def multi_label_metrics(probs, gold_labels):
 
 # Fix random state
 seed = 42
+
 np.random.seed(seed)
 random.seed(seed)
 cuda.manual_seed(seed)
@@ -96,8 +107,8 @@ torch.manual_seed(seed)
 torch.random.manual_seed(seed)
 
 # Load the processed dataset (Options: normal, segmented)
-file_name = 'segmented'
-data, labels = load_data(file_name)
+args = load_args()
+data, input_file, labels = load_data(args.file_name)
 
 # Split using K-Fold cross validation (10)
 folds = 10
@@ -124,7 +135,7 @@ best_model = None
 full_metrics = {}
 
 # Split between train and test
-for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
+for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_file)):
 
     # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
@@ -135,6 +146,10 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
     # Perform the split
     train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
+
+    # Load the test samples, based on index -> TODO
+
+    quit()
 
     # Initialize DataLoader
     train_dataset = FineTunedDataset(train_data, train_labels)
@@ -201,9 +216,18 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels)):
             predicted_output.extend(pred_labels)
             gold_labels_list.extend(gold_labels)
 
+            # Add the samples here as well -> TODO:
+
         # Display the metrics
         new_metrics = multi_label_metrics(predicted_output, gold_labels_list)
+
+        # Capture the confusion matrix per label -> TODO:
+
         print(f"Total loss: {total_loss}\n\n")
+
+    # Combine the sample to existing list -> TODO: 
+
+    # Add to the existing confusion matrix -> TODO:
 
     # We only take the last metric update
     full_metrics = {
@@ -229,6 +253,8 @@ full_metrics = {
     for key in full_metrics.keys()
 }
 
+# Save the sample predicted labels -> TODO:
+
 # Display here
 print("OVERALL AFTER AVERAGING\n")
 pprint(full_metrics)
@@ -240,7 +266,7 @@ print("\nBest model\n")
 print(best_model)
 
 # Save the model
-best_model_name = f"finetuned_saved_models/{model_name}_{file_name}.pth"
+best_model_name = f"finetuned_saved_models/{args.model + args.file_name}.pth"
 print(f"Model name is: {best_model_name}")
 torch.save(best_model.state_dict(), best_model_name)
 
