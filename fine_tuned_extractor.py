@@ -15,6 +15,8 @@ def load_args():
     parser.add_argument("--model_name", "-mn", type=str)
     parser.add_argument("--file_name", "-fn", type=str)
 
+    # Add flags for sliding window related -> TODO:
+
     return parser.parse_args()
 
 def load_llm_parts(model_name):
@@ -65,11 +67,16 @@ def prepare_data(row):
 datafile = "data/essays/essays.csv"
 dataset = dataset_processors.load_essays_df(datafile)
 
+# Create sliding window initializer -> TODO:
+
 cls_features = []
 input_samples = []
 merged_labels = []
 
 for index, row in dataset.iterrows():
+
+    # Add the different segmentation methods for sliding window -> TODO:
+
     bert_output, input_sample, multi_labels = prepare_data(row)
 
     cls_features.append(bert_output)
