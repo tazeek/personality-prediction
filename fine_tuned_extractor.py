@@ -6,6 +6,10 @@ import argparse
 import pickle
 import utils.dataset_processors as dataset_processors
 
+def get_model_names(model_name):
+
+    return f'{model_name}-finetuned-segmented'
+
 def load_args():
 
     # Create model name
@@ -13,7 +17,6 @@ def load_args():
 
     # Model related
     parser.add_argument("--model_name", "-mn", type=str)
-    parser.add_argument("--file_name", "-fn", type=str)
 
     # Add flags for sliding window related -> TODO:
 
@@ -29,15 +32,7 @@ def load_llm_parts(model_name):
         AutoTokenizer.from_pretrained(model_name)
     ]
 
-# Load BERT tokenizer and model (fine-tuned)
-args_settings = load_args()
-print(args_settings)
-
-model, tokenizer = load_llm_parts(args_settings.model_name)
-
-labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
-
-def prepare_data(row):
+def prepare_data(row, tokenizer):
 
     # Tokenize sentence
     essay = row['text']
@@ -63,6 +58,15 @@ def prepare_data(row):
     # Return the sentence and label
     return cls_embedding, essay, merged_labels
 
+# Load BERT tokenizer and model (fine-tuned)
+args_settings = load_args()
+model_name = get_model_names(args_settings.model_name)
+file_name = f'{model_name}-extracted'
+
+model, tokenizer = load_llm_parts(model_name)
+
+labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
+
 # Load the dataset and pre-process
 datafile = "data/essays/essays.csv"
 dataset = dataset_processors.load_essays_df(datafile)
@@ -77,7 +81,7 @@ for index, row in dataset.iterrows():
 
     # Add the different segmentation methods for sliding window -> TODO:
 
-    bert_output, input_sample, multi_labels = prepare_data(row)
+    bert_output, input_sample, multi_labels = prepare_data(row, tokenizer, labels)
 
     cls_features.append(bert_output)
     input_samples.append(input_sample)
@@ -86,5 +90,5 @@ for index, row in dataset.iterrows():
     if index % 100 == 0:
         print(f"Essays processed: {index + 1}")
 
-with open(f'{args_settings.file_name}.pkl', 'wb') as f:
+with open(f'{file_name}.pkl', 'wb') as f:
     pickle.dump(zip(cls_features, input_samples, merged_labels), f)
