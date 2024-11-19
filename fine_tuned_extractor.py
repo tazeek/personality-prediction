@@ -32,7 +32,7 @@ def load_llm_parts(model_name):
         AutoTokenizer.from_pretrained(model_name)
     ]
 
-def prepare_data(row, tokenizer):
+def prepare_data(row, model, tokenizer, labels):
 
     # Tokenize sentence
     essay = row['text']
@@ -64,6 +64,7 @@ model_name = get_model_names(args_settings.model_name)
 file_name = f'{model_name}-extracted'
 
 model, tokenizer = load_llm_parts(model_name)
+model.eval()
 
 labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
 
@@ -81,7 +82,7 @@ for index, row in dataset.iterrows():
 
     # Add the different segmentation methods for sliding window -> TODO:
 
-    bert_output, input_sample, multi_labels = prepare_data(row, tokenizer, labels)
+    bert_output, input_sample, multi_labels = prepare_data(row, model, tokenizer, labels)
 
     cls_features.append(bert_output)
     input_samples.append(input_sample)
