@@ -1,7 +1,7 @@
 
 from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, multilabel_confusion_matrix
 from pprint import pprint
 from torch import cuda
 
@@ -17,7 +17,6 @@ import torch
 import torch.nn as nn
 
 person_labels = ['EXT', 'NEU', 'AGR', 'CON', 'OPN']
-id2label = {idx:label for idx,label in enumerate(person_labels)}
 
 def load_args():
 
@@ -69,11 +68,11 @@ def multi_label_metrics(probs, gold_labels):
     y_pred = np.zeros(probs.shape)
     y_pred[np.where(probs >= threshold)] = 1
 
-    # TODO: 
+    # Add scores to dictionary per label
     metrics_dict = {}
     for i in range(len(person_labels)):
 
-        key = f"{id2label[i]}"
+        key = person_labels[i]
 
         # Check for F1
         metrics_dict[f"{key} - f1"] = f1_score(gold_labels[:, i], y_pred[:, i])
@@ -81,18 +80,11 @@ def multi_label_metrics(probs, gold_labels):
         # Check for accuracy
         metrics_dict[f"{key} - accuracy"] = accuracy_score(gold_labels[:, i], y_pred[:, i])
 
-    # Perform checking
-    #metrics = {
-    #    f"{id2label[i]} - accuracy": accuracy_score(gold_labels[:, i], y_pred[:, i]) 
-    #    for i in range(len(person_labels))
-    #}
-
     metrics_dict['overall_accuracy'] = accuracy_score(gold_labels, y_pred)
     metrics_dict['overall_f1'] = f1_score(gold_labels, y_pred, average='micro')
 
-    print("\n")
-    pprint(metrics_dict)
-    print("\n")
+    # Capture the confusion matrix per label
+    metrics_dict['confusion_matrix'] = multilabel_confusion_matrix(gold_labels, y_pred)
 
     return metrics_dict
 
@@ -134,12 +126,17 @@ best_model_fold = None
 best_model = None
 full_metrics = {}
 
+# Confusion Matrix storage
+confusion_matrix_storage = np.zeros((len(person_labels), 2, 2), dtype=int)
+
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_file)):
 
     # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
     print(f"Initializing model: {model_name}\n\n")
+    print(f"Starting Fold Number {fold + 1}")
+
     model = load_model(model_name)
     model.cuda()
 
@@ -148,9 +145,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
     train_labels, test_labels = labels[train_index], labels[test_index]
 
     # Load the test samples, based on index -> TODO
-
-    quit()
-
+    
     # Initialize DataLoader
     train_dataset = FineTunedDataset(train_data, train_labels)
     test_dataset = FineTunedDataset(test_data, test_labels)
@@ -164,7 +159,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
     
     for epoch in range(0, epochs):
 
-        print(f"Starting Fold Number {fold + 1} (Epoch: {epoch + 1})")
+        print(f"Epoch: {epoch + 1}")
         total_loss = 0.0
 
         # Train the model (Train data)
@@ -221,13 +216,13 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
         # Display the metrics
         new_metrics = multi_label_metrics(predicted_output, gold_labels_list)
 
-        # Capture the confusion matrix per label -> TODO:
-
         print(f"Total loss: {total_loss}\n\n")
 
     # Combine the sample to existing list -> TODO: 
 
-    # Add to the existing confusion matrix -> TODO:
+    # Add to the existing confusion matrix
+    confusion_matrix_storage += new_metrics['confusion_matrix']
+    del new_metrics['confusion_matrix']
 
     # We only take the last metric update
     full_metrics = {
@@ -253,20 +248,36 @@ full_metrics = {
     for key in full_metrics.keys()
 }
 
-# Save the sample predicted labels -> TODO:
-
 # Display here
 print("OVERALL AFTER AVERAGING\n")
 pprint(full_metrics)
 
-print(f"\nBest model metrics is in Fold {best_model_fold + 1}:\n")
-pprint(best_model_metrics)
+# Save the sample predicted labels -> TODO:
 
-print("\nBest model\n")
-print(best_model)
+# Normalize the confusion matrix
+normalized_conf_matrix_per_label = {}
+
+# Iterate over each label
+for i in range(confusion_matrix_storage.shape[0]):  
+
+    # Total predictions for the label (sum of row)
+    total_label_preds = np.sum(confusion_matrix_storage[i, :])
+    
+    # Normalize
+    normalized_conf_matrix_per_label[person_labels[i]] = (confusion_matrix_storage[i, :] / total_label_preds) * 100
+
+# Step 4: Display the normalized confusion matrix per label
+print("\nNormalized Confusion Matrix per Label (in %):")
+pprint(normalized_conf_matrix_per_label)
+quit()
+
+# Save the confusion matrix
+file_storage = f"confusion_matrixes/{args.model}-{args.file_name}-confusion_matrix.pkl"
+with open(file_storage, "wb") as f:
+    pickle.dump(normalized_conf_matrix_per_label, f)
 
 # Save the model
-best_model_name = f"finetuned_saved_models/{args.model + args.file_name}.pth"
+best_model_name = f"finetuned_saved_models/{args.model}-{args.file_name}.pth"
 print(f"Model name is: {best_model_name}")
 torch.save(best_model.state_dict(), best_model_name)
 
