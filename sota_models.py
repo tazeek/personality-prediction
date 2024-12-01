@@ -12,6 +12,7 @@ from utils.data_utils import FineTunedDataset
 import argparse
 import random
 import numpy as np
+import pandas as pd
 import pickle
 import torch
 import torch.nn as nn
@@ -28,12 +29,6 @@ def load_args():
     parser.add_argument("--model", "-m", type=str, default="lstm")
 
     return parser.parse_args()
-
-def file_name_mapper(file_name):
-    return {
-        'normal': 'fine_tuned_normal',
-        'segmented': 'fine_tuned_sentence_segmentation'
-    }[file_name]
 
 def load_data(file_name):
 
@@ -112,7 +107,7 @@ learning_rate = 0.001
 batch_size = 32
 epochs = 20
 drop_last = True
-model_name = 'lstm'
+model_name = args.model
 print("Hyperparameters Initialized!\n")
 
 # Convert to tensors
@@ -128,14 +123,13 @@ full_metrics = {}
 
 # Confusion Matrix storage
 confusion_matrix_storage = np.zeros((len(person_labels), 2, 2), dtype=int)
+csv_data = []
 
 # Split between train and test
 for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_file)):
 
     # Load the model required: LSTM, GRU, CNN (WORKS)
     # Create model and mount on GPU
-    print(f"Initializing model: {model_name}\n\n")
-    print(f"Starting Fold Number {fold + 1}")
 
     model = load_model(model_name)
     model.cuda()
@@ -144,11 +138,12 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
     train_data, test_data = data[train_index], data[test_index]
     train_labels, test_labels = labels[train_index], labels[test_index]
 
-    # Load the test samples, based on index -> TODO
+    train_samples = [input_file[idx] for idx in train_index]
+    test_samples = [input_file[idx] for idx in test_index]
     
     # Initialize DataLoader
-    train_dataset = FineTunedDataset(train_data, train_labels)
-    test_dataset = FineTunedDataset(test_data, test_labels)
+    train_dataset = FineTunedDataset(train_data, train_labels, train_samples)
+    test_dataset = FineTunedDataset(test_data, test_labels, test_samples)
 
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last)
     test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True, drop_last=drop_last)
@@ -159,7 +154,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
     
     for epoch in range(0, epochs):
 
-        print(f"Epoch: {epoch + 1}")
+        print(f"Fold {fold}, Epoch: {epoch + 1}")
         total_loss = 0.0
 
         # Train the model (Train data)
@@ -167,7 +162,7 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
 
         for batch in tqdm(train_loader, ncols = 50):
 
-            sample_data, gold_labels = batch
+            sample_data, gold_labels, train_samples = batch
 
             # - Mount the data and labels to GPU here
             sample_data = sample_data.cuda()
@@ -192,10 +187,11 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
 
         predicted_output = []
         gold_labels_list = []
+        sample_output_list = []
 
         for batch in tqdm(test_loader, ncols=50):
 
-            sample_data, gold_labels = batch
+            sample_data, gold_labels, test_samples = batch
 
             # Mount the data and labels to GPU here
             sample_data = sample_data.cuda()
@@ -210,15 +206,27 @@ for fold, (train_index, test_index) in enumerate(skf.split(data, labels, input_f
             # Add to the list for metrics checking
             predicted_output.extend(pred_labels)
             gold_labels_list.extend(gold_labels)
-
-            # Add the samples here as well -> TODO:
+            sample_output_list.extend(test_samples)
 
         # Display the metrics
         new_metrics = multi_label_metrics(predicted_output, gold_labels_list)
 
         print(f"Total loss: {total_loss}\n\n")
 
-    # Combine the sample to existing list -> TODO: 
+    for index, sample in enumerate(sample_output_list):
+
+        # Get the labels
+        actual = gold_labels_list[index]
+        predicted = predicted_output[index]
+
+        # Normalize predicted
+        predicted = [1 if prob >= 0.5 else 0 for prob in predicted]
+        
+        csv_data.append({
+            'sample': sample,
+            **{f"actual_label_{j+1}": actual[j] for j in range(5)},
+            **{f"predicted_label_{j+1}": predicted[j] for j in range(5)}
+        })
 
     # Add to the existing confusion matrix
     confusion_matrix_storage += new_metrics['confusion_matrix']
@@ -252,7 +260,10 @@ full_metrics = {
 print("OVERALL AFTER AVERAGING\n")
 pprint(full_metrics)
 
-# Save the sample predicted labels -> TODO:
+# Save the sample predicted labels
+# Save to CSV
+df = pd.DataFrame(csv_data)
+df.to_csv(f"{args.model}-{args.file_name}.csv", index=False)
 
 # Normalize the confusion matrix
 normalized_conf_matrix_per_label = {}
@@ -266,10 +277,9 @@ for i in range(confusion_matrix_storage.shape[0]):
     # Normalize
     normalized_conf_matrix_per_label[person_labels[i]] = (confusion_matrix_storage[i, :] / total_label_preds) * 100
 
-# Step 4: Display the normalized confusion matrix per label
+# Display the normalized confusion matrix per label
 print("\nNormalized Confusion Matrix per Label (in %):")
 pprint(normalized_conf_matrix_per_label)
-quit()
 
 # Save the confusion matrix
 file_storage = f"confusion_matrixes/{args.model}-{args.file_name}-confusion_matrix.pkl"

@@ -64,13 +64,14 @@ class MyMapDataset(Dataset):
     
 
 class FineTunedDataset(Dataset):
-    def __init__(self, cls_features, labels):
+    def __init__(self, cls_features, labels, samples):
         self._features = cls_features
         self._labels = labels
+        self._samples = samples
     
     def __len__(self):
         return len(self._labels)
     
     def __getitem__(self, idx):
-        return (self._features[idx], self._labels[idx])
+        return (self._features[idx], self._labels[idx], self._samples[idx])
 

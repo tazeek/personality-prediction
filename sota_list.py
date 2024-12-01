@@ -1,6 +1,47 @@
 import torch
 import torch.nn as nn
 
+# Define Attention Mechanism
+class AttentionLayer(nn.Module):
+    def __init__(self, hidden_dim):
+        super(AttentionLayer, self).__init__()
+        self.attention_weights = nn.Linear(hidden_dim, 1)  # Compute attention scores
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, cls_embedding):
+        # Compute attention scores (shape: batch_size, 1)
+        scores = self.attention_weights(cls_embedding)  
+        
+        # Normalize scores using softmax (optional for single vector; here for flexibility)
+        weights = self.softmax(scores)
+
+        # Multiply weights with CLS embedding (self-attention weighting)
+        enhanced_embedding = weights * cls_embedding
+
+        return enhanced_embedding
+    
+class SelfAttentionLayer(nn.Module):
+    def __init__(self, hidden_dim):
+        super(SelfAttentionLayer, self).__init__()
+        self.query = nn.Linear(hidden_dim, hidden_dim)
+        self.key = nn.Linear(hidden_dim, hidden_dim)
+        self.value = nn.Linear(hidden_dim, hidden_dim)
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, cls_embedding):
+        # Shape: (batch_size, hidden_dim)
+        query = self.query(cls_embedding)  # Shape: (batch_size, hidden_dim)
+        key = self.key(cls_embedding)      # Shape: (batch_size, hidden_dim)
+        value = self.value(cls_embedding)  # Shape: (batch_size, hidden_dim)
+
+        # Compute attention scores
+        scores = torch.matmul(query, key.transpose(-2, -1)) / (cls_embedding.size(-1) ** 0.5)  # Scaled dot-product
+        weights = self.softmax(scores)  # Shape: (batch_size, 1)
+
+        # Apply attention to the value
+        attended_embedding = torch.matmul(weights, value)  # Shape: (batch_size, hidden_dim)
+        return attended_embedding
+
 # Create CNN model
 class CNN(nn.Module):
     def __init__(self, output_size):
@@ -42,10 +83,12 @@ class LLMClassifer(nn.Module):
         super(LLMClassifer, self).__init__()
 
         self.dropout = nn.Dropout(dropout)
+        #self.attention = SelfAttentionLayer(768)
         self.fc = nn.Linear(768, 5)
 
     def forward(self, x):
 
+        #enhanced_cls = self.attention(x)
         logits = self.fc(x)
         return torch.sigmoid(logits)
 
@@ -55,7 +98,8 @@ class LSTMNetwork(nn.Module):
         super(LSTMNetwork, self).__init__()
 
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, bidirectional=True, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=2, bidirectional=True, batch_first=True)
+        #self.attention = SelfAttentionLayer(hidden_size)
         self.fc = nn.Linear(hidden_size * 2, output_size)
 
         # Add attention layer -> TODO:

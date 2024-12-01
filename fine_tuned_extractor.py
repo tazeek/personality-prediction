@@ -6,6 +6,18 @@ import argparse
 import pickle
 import utils.dataset_processors as dataset_processors
 
+def base_model_name(model_name):
+    return {
+        'distillbert': 'distilbert-base-uncased', # 66M
+        'xlnet': 'xlnet-base-cased', # 110M
+        'bert': 'bert-base-uncased', # 110M
+        'roberta': 'roberta-base', # 125M
+        'albert': 'albert-base-v2', # 11M
+        'electra': 'google/electra-small-discriminator', # 14M
+        'big-bird': 'google/bigbird-roberta-base', # 125M
+        'longformer': 'allenai/longformer-base-4096' # 149M
+    }[model_name]
+
 def get_model_names(model_name):
 
     return f'{model_name}-finetuned-segmented'
@@ -38,7 +50,12 @@ def prepare_data(row, model, tokenizer, labels):
     essay = row['text']
 
     # Encode them using the tokenizer
-    encoded_essay = tokenizer(essay, truncation = True, return_tensors='pt')
+    encoded_essay = tokenizer(essay, 
+        truncation = True, 
+        return_tensors='pt', 
+        max_length = 512, 
+        add_special_tokens=True
+    )
 
     # Convert to embeddings via CLS token
     cls_embedding = []
